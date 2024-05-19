@@ -84,8 +84,8 @@ if __name__ == '__main__':
     #loop.run_until_complete(websockets.serve(send_audio, '', 7777, ping_interval=None))
     #loop.run_forever()
 
-    #asyncio.run(start_websocket_server())
-    #asyncio.run(start_websocket_audio())
+    asyncio.run(start_websocket_server())
+    asyncio.run(start_websocket_audio())
 
     #asyncio.run(main())
 
