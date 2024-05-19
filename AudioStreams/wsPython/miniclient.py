@@ -10,6 +10,8 @@ ws = websocket.WebSocket()
 
 ws.connect("ws://localhost:7777")
 
+ws.send("1")
+
 while True:
 	data = ws.recv()
 	stream.write(data)
