@@ -80,12 +80,13 @@ async def main():
 
 if __name__ == '__main__':
     #loop = asyncio.new_event_loop()
-    #loop.run_until_complete(websockets.serve(websocket_handler, '', 8888, ping_interval=None))
-    #loop.run_until_complete(websockets.serve(send_audio, '', 7777, ping_interval=None))
-    #loop.run_forever()
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(websockets.serve(websocket_handler, '', 8888, ping_interval=None))
+    loop.run_until_complete(websockets.serve(send_audio, '', 7777, ping_interval=None))
+    loop.run_forever()
 
-    asyncio.run(start_websocket_server())
-    asyncio.run(start_websocket_audio())
+    #asyncio.run(start_websocket_server())
+    #asyncio.run(start_websocket_audio())
 
     #asyncio.run(main())
 
