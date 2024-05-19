@@ -14,7 +14,7 @@ stream = audio.open(format=pyaudio.paInt16,
                     rate=16000,
                     output=True,
                     frames_per_buffer=CHUNK_SIZE)
-
+# stupid comment
 
 
 def record_wav(wf):
