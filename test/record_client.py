@@ -6,7 +6,7 @@ import logging
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 
-RATE = 44100
+RATE = 16000
 CHUNK = 1024
 PORT = 8888
 

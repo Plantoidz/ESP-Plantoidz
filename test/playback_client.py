@@ -7,6 +7,7 @@ logging.basicConfig(level=logging.INFO)
 
 # Define the server's port as a variable
 PORT = 7777
+RATE = 16000
 
 # Initialize PyAudio
 p = pyaudio.PyAudio()
@@ -16,7 +17,7 @@ stream = p.open(
     output=True,
     format=pyaudio.paInt16,
     channels=1,
-    rate=44100,
+    rate=RATE,
 )
 
 # Create a WebSocket object
