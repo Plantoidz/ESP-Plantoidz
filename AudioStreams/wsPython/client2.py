@@ -8,6 +8,7 @@ def record_microphone(stream):
         data = stream.read(CHUNK)
         print("running..")
         yield data
+        
 
 async def on_message(ws):
 	while True:

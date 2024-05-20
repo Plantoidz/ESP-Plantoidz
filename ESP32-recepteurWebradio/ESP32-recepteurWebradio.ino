@@ -24,18 +24,18 @@ CRGB leds[NUM_LEDS];
 #define BRIGHTNESS 128
 
 // Define I2S connections
-#define I2S_DOUT 13 //this value is for olimex, for simple esp32 use :   22
-#define I2S_BCLK 14 //this value is for olimex, for simple esp32 use :   26
-#define I2S_LRC  15 //this value is for olimex, for simple esp32 use :   25
+#define I2S_DOUT 13 // 13 is for olimex, for simple esp32 use :   22
+#define I2S_BCLK 14 // 14 is for olimex, for simple esp32 use :   26
+#define I2S_LRC  15 // 15 is for olimex, for simple esp32 use :   25
 
 // Create audio object
 Audio audio;
 
 // Wifi Credentials
-// String ssid = "Freebox-A5E322";
-// String password = "separes7-feminin-plagiariis-divinat";
-String ssid = "HackerSpace";
-String password = "teamhackers";
+String ssid = "Freebox-A5E322";
+String password = "separes7-feminin-plagiariis-divinat";
+// String ssid = "HackerSpace";
+// String password = "teamhackers";
 
 void setup() {
   delay(100);  // power-up safety delay

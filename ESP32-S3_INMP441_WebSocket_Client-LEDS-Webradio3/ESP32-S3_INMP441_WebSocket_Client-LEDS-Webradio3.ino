@@ -18,7 +18,7 @@ Arduino Websockets: 0.5.3
 https://github.com/gilmaimon/ArduinoWebsockets
 */
 
-#define ESP_ID 3
+#define ESP_ID 4
 
 #include <FastLED.h>
 // Information about the LED strip itself
@@ -55,13 +55,11 @@ CRGB leds[NUM_LEDS];
 #define bufferCnt 10
 #define bufferLen 1024
 int16_t sBuffer[bufferLen];
-// char* sBuffer;
 
 #define MODE_IDLE   0
 #define MODE_LISTEN 1
-#define MODE_SPEAK  2
-#define MODE_THINK  3
-
+#define MODE_THINK  2
+#define MODE_SPEAK  3
 
 const char* ssid = "Freebox-A5E322";
 const char* password = "separes7-feminin-plagiariis-divinat";
@@ -73,24 +71,20 @@ const char* websocket_server_host = "192.168.1.185";
 // const char* websocket_server_host = "192.168.0.102";
 
 const uint16_t websocket_server_port_mic = 8888;  // <WEBSOCKET_SERVER_PORT> for the mic streaming
-// const uint16_t websocket_server_port_amp = 7777;  // <WEBSOCKET_SERVER_PORT> for the sound streaming
+const uint16_t websocket_server_port_amp = 7777;  // <WEBSOCKET_SERVER_PORT> for the sound streaming
 
 using namespace websockets;
 WebsocketsClient client_mic;
-// WebsocketsClient client_amp;
-bool isWebSocketConnected_mic = false;
-// bool isWebSocketConnected_amp = false;
+WebsocketsClient client_amp;
+bool isWebSocketConnected_mic;
+bool isWebSocketConnected_amp;
 
 
-TaskHandle_t i2smicTask = NULL;
-TaskHandle_t i2sampTask = NULL;
+TaskHandle_t i2smicTask;
 int MODE = 0;
 
 void (*LED_function)();
 
-
-bool i2s_RX_on = false;
-bool i2s_TX_on = false;
 
 // I2S SETUPS
 
@@ -132,36 +126,26 @@ const i2s_pin_config_t pin_config_tx = {
 };
 
 void i2s_TX_init(i2s_port_t i2sport) {
-  if(i2s_TX_on == true) { return; }
   i2s_driver_install(i2sport, &i2s_config_tx, 0, NULL);
   i2s_set_pin(i2sport, &pin_config_tx);
-  i2s_TX_on = true;
 }
 
 void i2s_RX_init(i2s_port_t i2sport) {
-  if(i2s_RX_on == true) { return; }
   i2s_driver_install(i2sport, &i2s_config_rx, 0, NULL);
   i2s_set_pin(i2sport, &pin_config_rx);
-  i2s_RX_on = true;
 }
 
 void i2s_RX_uninst(){
-  if(i2s_RX_on == false) { return; }
-  Serial.print("Uninstalling Rx.........");
   i2s_driver_uninstall(I2S_PORT_RX);
-  i2s_RX_on = false;
 }
 
 void i2s_TX_uninst(){
-  if(i2s_TX_on == false) { return; }
-  Serial.print("Uninstalling Tx.........");
   i2s_driver_uninstall(I2S_PORT_TX);
-  i2s_TX_on = false;
 }
 
 // void i2s_buff_init(){
-//    sBuffer = (char*) calloc(bufferLen, sizeof(char));
-// //   flash_write_buff = (uint8_t*) calloc(I2S_READ_LEN, sizeof(char));
+//   i2s_read_buff = (char*) calloc(I2S_READ_LEN, sizeof(char));
+//   flash_write_buff = (uint8_t*) calloc(I2S_READ_LEN, sizeof(char));
 // }
 
 
@@ -181,25 +165,14 @@ void LED_loop() {
   FastLED.delay(1);
 }
 
-
-void socket_poll() {
-  if(MODE != MODE_SPEAK) {
-    if(client_mic.available()) { client_mic.poll(); }
-  }
-}
-
 void loop() {
 
 
-  socket_poll();
+  if(client_mic.available()) { client_mic.poll(); }
+  // if(client_amp.available()) { client_amp.poll(); }
 
   LED_loop();
 
-}
-
-
-void DoNothing(WebsocketsMessage msg) {
-  return;
 }
 
 
@@ -207,63 +180,33 @@ void set_modality(int m) {
 
 // MODE_LISTEN 1, MODE_THINK 2, MODE_SPEAK 3
 
-  Serial.print("processing set-modality with MODE = ");
-  Serial.print(MODE);
-  Serial.print(" and argument m = ");
-  Serial.println(m);
-  
-  // if(m == MODE) { return; }
+  Serial.print("analysing status for m = ");
+  Serial.print(m);
 
-  switch(m) {
+  if(m == MODE_LISTEN) {
 
-    case MODE_LISTEN:
+    Serial.println("Activating listening mode.");
 
-      Serial.println("activating LISTEN mode");
-      // client_mic.send(String(m));
+    MODE = MODE_LISTEN;
+    LED_function = &LED_listen;
+    xTaskCreatePinnedToCore(micTask, "micTask", 10000, NULL, 1, &i2smicTask, 1);
 
-  //  first unset the SPEAK mode
-  //    i2s_TX_uninst();
-  //     if(i2sampTask != NULL) { vTaskDelete(i2sampTask); i2sampTask = NULL; }
+  }
 
-      MODE = MODE_LISTEN;
-      LED_function = &LED_listen;
+  if(m == MODE_SPEAK) {
 
-      if(i2smicTask == NULL) { 
-        Serial.println("pinning micTask to core 1");
-        xTaskCreatePinnedToCore(micTask, "micTask", 10000, NULL, 1, &i2smicTask, 1); 
-      } else {
-        vTaskResume(i2smicTask);
-      }
-      break;
+    Serial.println("Activating speaking mode.");
 
 
+    // first unset the LISTEN mode
+    i2s_RX_uninst();
+    if(i2smicTask != NULL) { vTaskDelete(i2smicTask); i2smicTask = NULL; }
 
-    case MODE_SPEAK:
 
-      Serial.println("activating SPEAK mode");
-
-      client_mic.send(String(m)); // required in order to break from the mic_stream loop
-      if(MODE == MODE_LISTEN) { Serial.println("SENDING TWICE *****"); client_mic.send(String(m)); } // required in order to avoid getting stuck in the ws.recv() loop 
-
-      //first unset the LISTEN mode
-      i2s_RX_uninst();
-      if(i2smicTask != NULL) { 
-        // vTaskDelete(i2smicTask); i2smicTask = NULL;
-        vTaskSuspend(i2smicTask);
-      }
-
-      client_mic.onMessage(DoNothing);
-
-      // then activate the SPEAK mode
-      MODE = MODE_SPEAK;
-      LED_function = &LED_speak;
-      if(i2sampTask == NULL) { 
-        Serial.println("pinning ampTask to core 1");
-        xTaskCreatePinnedToCore(ampTask, "ampTask", 32768, NULL, 1, &i2sampTask, 1); 
-      } else {
-        vTaskResume(i2sampTask);
-      }
-      break;
+    // then activate the SPEAK mode
+    MODE = MODE_SPEAK;
+    LED_function = &LED_speak;
+    xTaskCreatePinnedToCore(ampTask, "ampTask", 10000, NULL, 1, NULL, 1);
 
   }
 }
@@ -301,62 +244,72 @@ void connectWSServer_mic() {
   }
   Serial.println("Websocket Connected to the mic server!");
 
-  client_mic.send(String(ESP_ID)); // SEND ESP_ID to the server
+  client_mic.send(String(ESP_ID));
 }
 
+void connectWSServer_amp() {
+  client_amp.onEvent(onEventsCallback_amp);
+  // client_amp.onMessage(onMessageCallback_amp);
+
+  while (!client_amp.connect(websocket_server_host, websocket_server_port_amp, "/")) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("Websocket Connected to the amp server!");
+}
+
+
+// WEBSOCKET STUFF
 
 void onEventsCallback_mic(WebsocketsEvent event, String data) {
   if (event == WebsocketsEvent::ConnectionOpened) {
-    Serial.println("Connnection Opened for esp32");
+    Serial.println("Connnection Opened for mic");
     isWebSocketConnected_mic = true;
   } else if (event == WebsocketsEvent::ConnectionClosed) {
-    Serial.println("Connnection Closed for esp32");
+    Serial.println("Connnection Closed for mic");
     isWebSocketConnected_mic = false;
   } else if (event == WebsocketsEvent::GotPing) {
-   // Serial.println("Got a Ping!");
+    Serial.println("Got a Ping!");
   } else if (event == WebsocketsEvent::GotPong) {
-    //Serial.println("Got a Pong!");
+    Serial.println("Got a Pong!");
   }
 }
 
-int Cnt = 0;
+void onEventsCallback_amp(WebsocketsEvent event, String data) {
+  if (event == WebsocketsEvent::ConnectionOpened) {
+    Serial.println("Connnection Opened for amp");
+    isWebSocketConnected_amp = true;
+  } else if (event == WebsocketsEvent::ConnectionClosed) {
+    Serial.println("Connnection Closed for amp");
+    isWebSocketConnected_amp = false;
+  } else if (event == WebsocketsEvent::GotPing) {
+    Serial.println("Got a Ping!");
+  } else if (event == WebsocketsEvent::GotPong) {
+    Serial.println("Got a Pong!");
+  }
+}
 
 void onMessageCallback_mic(WebsocketsMessage msg) {
+  Serial.print("Got message: ");
+  Serial.println(msg.data());
 
-
-  Serial.println("entering a new callback.....");
-
-  if(msg.type() == MessageType::Binary){ 
-    return; }
-
-
-  String data = msg.data();  
-
-  Serial.print(" !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Got message: ");
-  Serial.print(data);
-  Serial.print(" with countter ==== ");
-  Serial.println(Cnt++);
-
-
+  String data = msg.data();
   int m = data.toInt();
   set_modality(m);
   
-  Serial.print("POST SET MODALITIY::::: current value of MODE == ");
+  Serial.print("current value of MODE == ");
   Serial.println(MODE);
 }
 
-
-
-
-// void onMessageCallback_amp(WebsocketsMessage message) {
-//     Serial.println("Receiving data stream for AMP............");
-//     int msgLength = message.length();
-//     if(message.type() == MessageType::Binary){
-//       if(msgLength > 0){
-//         i2s_write_data((char*)message.c_str(), msgLength);
-//       }
-//     }
-// }
+void onMessageCallback_amp(WebsocketsMessage message) {
+    Serial.println("Receiving data stream for AMP............");
+    int msgLength = message.length();
+    if(message.type() == MessageType::Binary){
+      if(msgLength > 0){
+        i2s_write_data((char*)message.c_str(), msgLength);
+      }
+    }
+}
 
 void i2s_write_data(char *buf_ptr, int buf_size){
 
@@ -369,7 +322,7 @@ void i2s_write_data(char *buf_ptr, int buf_size){
 void micTask(void* parameter) {
 
   i2s_RX_init(I2S_PORT_RX);
-  // i2s_start(I2S_PORT_RX);
+  i2s_start(I2S_PORT_RX);
 
   size_t bytesIn = 0;
 
@@ -386,60 +339,27 @@ void micTask(void* parameter) {
 
 void ampTask(void* parameter) {
 
-  
     i2s_TX_init(I2S_PORT_TX);
-    // i2s_start(I2S_PORT_TX);
-  
+    i2s_start(I2S_PORT_TX);
 
-    Serial.println("activating ampTASK");
+    connectWSServer_amp();
+
 
     while(1) {
       
-      if(client_mic.available()) { 
-
-          // delay(1);
-
-           Serial.println("starting to read from client_mic socket");
-
-         WebsocketsMessage message = client_mic.readBlocking();
-
-        // if(client_mic._endpoint.poll() == false) { continue; }
-        // WebsocketsMessage message = client_mic._endpoint.recv();
-
-           Serial.println("done reading from client_mic socket");
-
+      WebsocketsMessage message = client_amp.readBlocking();
       
-          int msgLength = message.length();
+      int msgLength = message.length();
+      if(message.type() == MessageType::Binary){
+          if(msgLength > 0){
+              i2s_write_data((char*)message.c_str(), msgLength);
+         }
+         else {
+           i2s_TX_uninst();
+           vTaskDelete(NULL);
+         }
+      }
 
-          Serial.println("checking the length...");
-
-
-          if(message.type() == MessageType::Binary){
-
-              if(msgLength > 0){
-
-                Serial.println("checking before the message_cstr");
-
-                  i2s_write_data((char*)message.c_str(), msgLength);
-
-                  Serial.println("checking AFTER the message_cstr");
-
-              }
-              else {
-                Serial.println("Reached end of audio stream ............");
-                
-                client_mic.onMessage(onMessageCallback_mic);
-
-                MODE = MODE_IDLE;
-                i2s_TX_uninst();
-                // i2sampTask = NULL; vTaskDelete(NULL); 
-                // i2s_stop(I2S_PORT_TX);
-                vTaskSuspend(NULL);
-              }
-          }
-
-
-    }
 
     }
 
@@ -530,16 +450,11 @@ void setup() {
 
   setup_LEDs();
 
-
-  // i2s_buff_init();
-  i2s_RX_init(I2S_PORT_RX);  // default install i2s in RX mode
-  
-
   connectWiFi();
   connectWSServer_mic();
   // connectWSServer_amp();
 
-  // set_modality(MODE_LISTEN);
+  set_modality(MODE_IDLE);
 
 }
 
