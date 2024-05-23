@@ -18,7 +18,7 @@ Arduino Websockets: 0.5.3
 https://github.com/gilmaimon/ArduinoWebsockets
 */
 
-#define ESP_ID 4
+#define ESP_ID 3
 
 #include <FastLED.h>
 // Information about the LED strip itself
@@ -61,14 +61,14 @@ int16_t sBuffer[bufferLen];
 #define MODE_THINK  2
 #define MODE_SPEAK  3
 
-const char* ssid = "Freebox-A5E322";
-const char* password = "separes7-feminin-plagiariis-divinat";
-const char* websocket_server_host = "192.168.1.185";
+// const char* ssid = "Freebox-A5E322";
+// const char* password = "separes7-feminin-plagiariis-divinat";
+// const char* websocket_server_host = "192.168.1.185";
 
 
-// const char* ssid = "HackerSpace";
-// const char* password = "teamhackers";
-// const char* websocket_server_host = "192.168.0.102";
+const char* ssid = "HackerSpace";
+const char* password = "teamhackers";
+const char* websocket_server_host = "192.168.0.104";
 
 const uint16_t websocket_server_port_mic = 8888;  // <WEBSOCKET_SERVER_PORT> for the mic streaming
 const uint16_t websocket_server_port_amp = 7777;  // <WEBSOCKET_SERVER_PORT> for the sound streaming
