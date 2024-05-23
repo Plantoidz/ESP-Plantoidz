@@ -1,0 +1,5 @@
+numpy
+websockets
+wave
+pydub 
+faster_whisper
