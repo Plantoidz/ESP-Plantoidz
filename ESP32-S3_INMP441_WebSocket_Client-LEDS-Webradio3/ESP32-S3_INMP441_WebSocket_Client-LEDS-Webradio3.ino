@@ -17,14 +17,14 @@ OLIMER ESP32 POE
 #include <SPIFFS.h>
 
 // we define the button pin for wifimanager
-#define TRIGGER_PIN 34
+#define TRIGGER_PIN 34 // 34 for olimex ,33 esp32 dev kit
 const char* apPassword = "password";  // password used for the acces point
 bool wm_nonblocking = false;          // change to true to use non blocking
 WiFiManager wm;                       // global wm instance
 WiFiManagerParameter custom_field;    // global param ( for non blocking w params )
 
 //we define a UID
-#define ESP_ID 3
+#define ESP_ID 2
 
 // Information about the LED strip itself
 #define LED_PIN 4
@@ -395,7 +395,7 @@ void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
   delay(3000);
-  pinMode(TRIGGER_PIN, INPUT);
+  pinMode(TRIGGER_PIN, INPUT_PULLUP);
   if (wm_nonblocking) wm.setConfigPortalBlocking(false);
   // add a custom input field
   int customFieldLength = 40;
@@ -414,7 +414,7 @@ void setup() {
   bool res;
   // res = wm.autoConnect(); // auto generated AP name from chipid
   // res = wm.autoConnect("AutoConnectAP"); // anonymous ap
-  res = wm.autoConnect("AutoConnectAP", "password");  // password protected ap
+  res = wm.autoConnect("unconfiguredPlantoid", apPassword);  // password protected ap
 
   if (!res) {
     Serial.println("Failed to connect or hit timeout");
