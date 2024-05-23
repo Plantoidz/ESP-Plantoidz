@@ -7,75 +7,20 @@ OLIMER ESP32 POE
 */
 
 // time to load the libs.
-#include <FS.h>  //this needs to be first, or it all crashes and burns...
-#include <Arduino.h>
-#include <FastLED.h>
-#include <driver/i2s.h>
-#include <WiFi.h>
-#include <ArduinoWebsockets.h>
-#include <WiFiManager.h>  // https://github.com/tzapu/WiFiManager
-#include <SPIFFS.h>
+#include "includes.h"  //this needs to be first, or it all crashes and burns...
+// time to load the config
+#include "config.h"  
 
-// we define the button pin for wifimanager
-#define TRIGGER_PIN 34 // 34 for olimex ,33 esp32 dev kit
-const char* apPassword = "password";  // password used for the acces point
-bool wm_nonblocking = false;          // change to true to use non blocking
-WiFiManager wm;                       // global wm instance
-WiFiManagerParameter custom_field;    // global param ( for non blocking w params )
-
-//we define a UID
-#define ESP_ID 2
-
-// Information about the LED strip itself
-#define LED_PIN 4
-#define NUM_LEDS 25
-#define CHIPSET WS2811
-#define COLOR_ORDER GRB
-CRGB leds[NUM_LEDS];
-#define BRIGHTNESS 128
-#define I2S_PORT_TX I2S_NUM_0
-#define I2S_PORT_RX I2S_NUM_0
-
-// AMP I2S CONNECTIONS
-#define I2S_DOUT 13
-#define I2S_BCLK 14  // this should be the same as I2S_SCK for the mic
-#define I2S_LRC 15   // this should be the same as I2S_WS for the mic
-
-// MIC I2S CONNECTIONS
-#define I2S_SD 2
-#define I2S_WS 15
-#define I2S_SCK 14
-// AUDIO QUALITY SETTINGS
-#define I2S_SAMPLE_RATE (16000)
-#define I2S_SAMPLE_BITS (16)
-#define I2S_READ_LEN (1024)
-
-#define bufferCnt 10
-#define bufferLen 1024
-int16_t sBuffer[bufferLen];
-#define MODE_IDLE 0
-#define MODE_LISTEN 1
-#define MODE_THINK 2
-#define MODE_SPEAK 3
-
-
-const char* websocket_server_host = "192.168.0.104";
-
-const uint16_t websocket_server_port_mic = 8888;  // <WEBSOCKET_SERVER_PORT> for the mic streaming
-const uint16_t websocket_server_port_amp = 7777;  // <WEBSOCKET_SERVER_PORT> for the sound streaming
-
+// WS STUFF
 using namespace websockets;
 WebsocketsClient client_mic;
 WebsocketsClient client_amp;
 bool isWebSocketConnected_mic;
 bool isWebSocketConnected_amp;
-
-
 TaskHandle_t i2smicTask;
-int MODE = 0;
 
-void (*LED_function)();
-
+int MODE = 0;  //MODE_IDLE 0, MODE_LISTEN 1, MODE_THINK 2, MODE_SPEAK 3
+void (*LED_function)(); // ????
 
 // I2S SETUPS
 
@@ -152,17 +97,17 @@ void loop() {
 
 void set_modality(int m) {
   //MODE_IDLE 0, MODE_LISTEN 1, MODE_THINK 2, MODE_SPEAK 3
-  Serial.print("analysing status for m = ");
-  Serial.print(m);
+  if(serialDebug)Serial.print("analysing status for m = ");
+  if(serialDebug)Serial.print(m);
   if (m == MODE_LISTEN) {
-    Serial.println("Activating listening mode.");
+    if(serialDebug)Serial.println("Activating listening mode.");
     MODE = MODE_LISTEN;
     LED_function = &LED_listen;
     xTaskCreatePinnedToCore(micTask, "micTask", 10000, NULL, 1, &i2smicTask, 1);
   }
 
   if (m == MODE_SPEAK) {
-    Serial.println("Activating speaking mode.");
+    if(serialDebug)Serial.println("Activating speaking mode.");
     // first unset the LISTEN mode
     i2s_RX_uninst();
     if (i2smicTask != NULL) {
@@ -177,7 +122,6 @@ void set_modality(int m) {
 }
 
 void connectWiFi() {
-
 }
 
 // WEBSOCKETS STUFF
@@ -186,66 +130,66 @@ void connectWSServer_mic() {
   client_mic.onMessage(onMessageCallback_mic);
   while (!client_mic.connect(websocket_server_host, websocket_server_port_mic, "/")) {
     delay(500);
-    Serial.print(".");
+    if(serialDebug)Serial.println("waiting for the ws server");
+    if(serialDebug)Serial.print(".");
     checkButton();
   }
-  Serial.println("Websocket Connected to the mic server!");
+  if(serialDebug)Serial.println("Websocket Connected to the mic server!");
   client_mic.send(String(ESP_ID));
 }
 
 void connectWSServer_amp() {
   client_amp.onEvent(onEventsCallback_amp);
-  // client_amp.onMessage(onMessageCallback_amp);
   while (!client_amp.connect(websocket_server_host, websocket_server_port_amp, "/")) {
     delay(500);
-    Serial.print(".");
+    if(serialDebug)Serial.print(".");
     checkButton();
   }
-  Serial.println("Websocket Connected to the amp server!");
+  if(serialDebug)Serial.println("Websocket Connected to the amp server!");
 }
 
 // WEBSOCKET STUFF
 
 void onEventsCallback_mic(WebsocketsEvent event, String data) {
   if (event == WebsocketsEvent::ConnectionOpened) {
-    Serial.println("Connnection Opened for mic");
+    if(serialDebug)Serial.println("Connnection Opened for mic");
     isWebSocketConnected_mic = true;
   } else if (event == WebsocketsEvent::ConnectionClosed) {
-    Serial.println("Connnection Closed for mic");
+    if(serialDebug)Serial.println("Connnection Closed for mic");
     isWebSocketConnected_mic = false;
   } else if (event == WebsocketsEvent::GotPing) {
-    Serial.println("Got a Ping!");
+    if(serialDebug)Serial.println("Got a Ping!");
   } else if (event == WebsocketsEvent::GotPong) {
-    Serial.println("Got a Pong!");
+    if(serialDebug)Serial.println("Got a Pong!");
   }
 }
 
 void onEventsCallback_amp(WebsocketsEvent event, String data) {
   if (event == WebsocketsEvent::ConnectionOpened) {
-    Serial.println("Connnection Opened for amp");
+    if(serialDebug)Serial.println("Connnection Opened for amp");
     isWebSocketConnected_amp = true;
   } else if (event == WebsocketsEvent::ConnectionClosed) {
-    Serial.println("Connnection Closed for amp");
+    if(serialDebug)Serial.println("Connnection Closed for amp");
     isWebSocketConnected_amp = false;
   } else if (event == WebsocketsEvent::GotPing) {
-    Serial.println("Got a Ping!");
+    if(serialDebug)Serial.println("Got a Ping!");
   } else if (event == WebsocketsEvent::GotPong) {
-    Serial.println("Got a Pong!");
+    if(serialDebug)Serial.println("Got a Pong!");
   }
 }
 
 void onMessageCallback_mic(WebsocketsMessage msg) {
-  Serial.print("Got message: ");
-  Serial.println(msg.data());
+  if(serialDebug)Serial.print("Got message: ");
+  if(serialDebug)Serial.println(msg.data());
   String data = msg.data();
   int m = data.toInt();
   set_modality(m);
-  Serial.print("current value of MODE == ");
-  Serial.println(MODE);
+  if(serialDebug)Serial.print("current value of MODE == ");
+  if(serialDebug)Serial.println(MODE);
 }
 
 void onMessageCallback_amp(WebsocketsMessage message) {
-  Serial.println("Receiving data stream for AMP............");
+  if(serialDebug)Serial.println("Receiving data stream for AMP............");
   int msgLength = message.length();
   if (message.type() == MessageType::Binary) {
     if (msgLength > 0) {
@@ -308,7 +252,7 @@ void LED_listen() {
 
 void LED_speak() {
   static uint8_t hue = 0;
-  Serial.print("@");
+  if(serialDebug)Serial.print("@");
   // First slide the led in one direction
   for (int i = 0; i < NUM_LEDS; i++) {
     // Set the i'th led to red
@@ -348,32 +292,28 @@ void checkButton() {
     // poor mans debounce/press-hold, code not ideal for production
     delay(50);
     if (digitalRead(TRIGGER_PIN) == LOW) {
-      Serial.println("Button Pressed");
+      if(serialDebug)Serial.println("Button Pressed");
       // still holding button for 3000 ms, reset settings, code not ideaa for production
       delay(3000);  // reset delay hold
       if (digitalRead(TRIGGER_PIN) == LOW) {
-        Serial.println("Button Held");
-        Serial.println("Erasing Config, restarting");
+        if(serialDebug)Serial.println("Button Held");
+        if(serialDebug)Serial.println("Erasing Config, restarting");
         wm.resetSettings();
         ESP.restart();
       }
-
       // start portal w delay
-      Serial.println("Starting config portal");
-      wm.setConfigPortalTimeout(120);
-
+      if(serialDebug)Serial.println("Starting config portal");
+      wm.setConfigPortalTimeout(portalDelay);        
       if (!wm.startConfigPortal("UnconfiguredPlantoid", apPassword)) {
-        Serial.println("failed to connect or hit timeout");
+        if(serialDebug)Serial.println("failed to connect or hit timeout");
         delay(3000);
-        // ESP.restart();
       } else {
         //if you get here you have connected to the WiFi
-        Serial.println("connected...yeey :)");
+        if(serialDebug)Serial.println("connected...yeey :)");
       }
     }
   }
 }
-
 
 String getParam(String name) {
   //read parameter from server, for customhmtl input
@@ -385,48 +325,41 @@ String getParam(String name) {
 }
 
 void saveParamCallback() {
-  Serial.println("[CALLBACK] saveParamCallback fired");
-  Serial.println("PARAM customfieldid = " + getParam("customfieldid"));
+  if(serialDebug)Serial.println("[CALLBACK] saveParamCallback fired");
+  if(serialDebug)Serial.println("PARAM customfieldid = " + getParam("customfieldid"));
 }
 
 void setup() {
   delay(100);           // power-up safety delay
   WiFi.mode(WIFI_STA);  // explicitly set mode, esp defaults to STA+AP
-  Serial.begin(115200);
-  Serial.setDebugOutput(true);
+  if(serialDebug)Serial.begin(115200);
+  if(serialDebug)Serial.setDebugOutput(true);
   delay(3000);
   pinMode(TRIGGER_PIN, INPUT_PULLUP);
   if (wm_nonblocking) wm.setConfigPortalBlocking(false);
   // add a custom input field
   int customFieldLength = 40;
-
   // test custom html(radio)
   const char* custom_radio_str = "<br/><label for='customfieldid'>Custom Field Label</label><input type='radio' name='customfieldid' value='1' checked> One<br><input type='radio' name='customfieldid' value='2'> Two<br><input type='radio' name='customfieldid' value='3'> Three";
   new (&custom_field) WiFiManagerParameter(custom_radio_str);  // custom html input
-
   wm.addParameter(&custom_field);
   wm.setSaveParamsCallback(saveParamCallback);
   std::vector<const char*> menu = { "wifi", "info", "param", "sep", "restart", "exit" };
   wm.setMenu(menu);
-
   // set dark theme
   wm.setClass("invert");
   bool res;
-  // res = wm.autoConnect(); // auto generated AP name from chipid
-  // res = wm.autoConnect("AutoConnectAP"); // anonymous ap
   res = wm.autoConnect("unconfiguredPlantoid", apPassword);  // password protected ap
 
   if (!res) {
-    Serial.println("Failed to connect or hit timeout");
+    if(serialDebug)Serial.println("Failed to connect or hit timeout");
     // ESP.restart();
   } else {
     //if you get here you have connected to the WiFi
-    Serial.println("connected...yeey :)");
+    if(serialDebug)Serial.println("Pantoid connected... by wifi :)");
   }
 
   setup_LEDs();
-  //connectWiFi();
   connectWSServer_mic();
-  // connectWSServer_amp();
   set_modality(MODE_IDLE);
 }
