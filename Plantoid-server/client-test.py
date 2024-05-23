@@ -20,7 +20,7 @@ async def on_message(ws):
 async def send_audio():
     async with websockets.connect('ws://localhost:8888') as ws:
         
-
+        await ws.send("1")
         asyncio.create_task(on_message(ws))
 
         p = pyaudio.PyAudio()
