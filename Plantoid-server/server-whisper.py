@@ -15,7 +15,7 @@ from faster_whisper import WhisperModel
 
 # model = whisper.load_model('base.en')
 # model = WhisperModel("large-v2",  compute_type="auto")
-model = WhisperModel("small",  compute_type="auto")
+model = WhisperModel("small",  compute_type="auto", device="cpu")
 
 
 async def save_and_transcribe(audio_data):
