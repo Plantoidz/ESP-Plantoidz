@@ -1,38 +1,27 @@
-/////////////////////////////////////////////////////////////////
 /*
-  Broadcasting Your Voice with ESP32-S3 & INMP441
-  For More Information: https://youtu.be/qq2FRv0lCPw
-  Created by Eric N. (ThatProject)
-*/
-/////////////////////////////////////////////////////////////////
+ ethernet und wifi plantoid node
 
-/*
-- Device
+- Compatible devices 
 ESP32-S3 DevKit-C
-https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/hw-reference/esp32s3/user-guide-devkitc-1.html
-
-- Required Library
-Arduino ESP32: 2.0.9
-
-Arduino Websockets: 0.5.3
-https://github.com/gilmaimon/ArduinoWebsockets
+OLIMER ESP32 POE
 */
+
 // time to load the libs.
+#include <FS.h>  //this needs to be first, or it all crashes and burns...
 #include <Arduino.h>
 #include <FastLED.h>
 #include <driver/i2s.h>
 #include <WiFi.h>
 #include <ArduinoWebsockets.h>
 #include <WiFiManager.h>  // https://github.com/tzapu/WiFiManager
-
-
+#include <SPIFFS.h>
 
 // we define the button pin for wifimanager
 #define TRIGGER_PIN 34
-const char* apPassword = "password";   // password used for the acces point
-bool wm_nonblocking = false;        // change to true to use non blocking
-WiFiManager wm;                     // global wm instance
-WiFiManagerParameter custom_field;  // global param ( for non blocking w params )
+const char* apPassword = "password";  // password used for the acces point
+bool wm_nonblocking = false;          // change to true to use non blocking
+WiFiManager wm;                       // global wm instance
+WiFiManagerParameter custom_field;    // global param ( for non blocking w params )
 
 //we define a UID
 #define ESP_ID 3
@@ -46,7 +35,6 @@ CRGB leds[NUM_LEDS];
 #define BRIGHTNESS 128
 #define I2S_PORT_TX I2S_NUM_0
 #define I2S_PORT_RX I2S_NUM_0
-
 
 // AMP I2S CONNECTIONS
 #define I2S_DOUT 13
@@ -70,13 +58,7 @@ int16_t sBuffer[bufferLen];
 #define MODE_THINK 2
 #define MODE_SPEAK 3
 
-// const char* ssid = "Freebox-A5E322";
-// const char* password = "separes7-feminin-plagiariis-divinat";
-// const char* websocket_server_host = "192.168.1.185";
 
-
-const char* ssid = "HackerSpace";
-const char* password = "teamhackers";
 const char* websocket_server_host = "192.168.0.104";
 
 const uint16_t websocket_server_port_mic = 8888;  // <WEBSOCKET_SERVER_PORT> for the mic streaming
@@ -152,10 +134,6 @@ void i2s_TX_uninst() {
   i2s_driver_uninstall(I2S_PORT_TX);
 }
 
-// void i2s_buff_init(){
-//   i2s_read_buff = (char*) calloc(I2S_READ_LEN, sizeof(char));
-//   flash_write_buff = (uint8_t*) calloc(I2S_READ_LEN, sizeof(char));
-// }
 
 void LED_loop() {
   LED_function();
@@ -164,10 +142,10 @@ void LED_loop() {
 }
 
 void loop() {
-  if(wm_nonblocking) wm.process(); // avoid delays() in loop when non-blocking and other long running code  
+  if (wm_nonblocking) wm.process();  // avoid delays() in loop when non-blocking and other long running code
   checkButton();
   if (client_mic.available()) { client_mic.poll(); }
-  // if(client_amp.available()) { client_amp.poll(); }
+
 
   LED_loop();
 }
@@ -199,16 +177,7 @@ void set_modality(int m) {
 }
 
 void connectWiFi() {
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-  Serial.println("");
+
 }
 
 // WEBSOCKETS STUFF
@@ -218,7 +187,7 @@ void connectWSServer_mic() {
   while (!client_mic.connect(websocket_server_host, websocket_server_port_mic, "/")) {
     delay(500);
     Serial.print(".");
-      checkButton();
+    checkButton();
   }
   Serial.println("Websocket Connected to the mic server!");
   client_mic.send(String(ESP_ID));
@@ -230,7 +199,7 @@ void connectWSServer_amp() {
   while (!client_amp.connect(websocket_server_host, websocket_server_port_amp, "/")) {
     delay(500);
     Serial.print(".");
-      checkButton();
+    checkButton();
   }
   Serial.println("Websocket Connected to the amp server!");
 }
@@ -373,27 +342,27 @@ void fadeall() {
 void LED_think() {
 }
 
-void checkButton(){
+void checkButton() {
   // check for button press
-  if ( digitalRead(TRIGGER_PIN) == LOW ) {
+  if (digitalRead(TRIGGER_PIN) == LOW) {
     // poor mans debounce/press-hold, code not ideal for production
     delay(50);
-    if( digitalRead(TRIGGER_PIN) == LOW ){
+    if (digitalRead(TRIGGER_PIN) == LOW) {
       Serial.println("Button Pressed");
       // still holding button for 3000 ms, reset settings, code not ideaa for production
-      delay(3000); // reset delay hold
-      if( digitalRead(TRIGGER_PIN) == LOW ){
+      delay(3000);  // reset delay hold
+      if (digitalRead(TRIGGER_PIN) == LOW) {
         Serial.println("Button Held");
         Serial.println("Erasing Config, restarting");
         wm.resetSettings();
         ESP.restart();
       }
-      
+
       // start portal w delay
       Serial.println("Starting config portal");
       wm.setConfigPortalTimeout(120);
-      
-      if (!wm.startConfigPortal("UnconfiguredPlantoid",apPassword)) {
+
+      if (!wm.startConfigPortal("UnconfiguredPlantoid", apPassword)) {
         Serial.println("failed to connect or hit timeout");
         delay(3000);
         // ESP.restart();
@@ -406,16 +375,16 @@ void checkButton(){
 }
 
 
-String getParam(String name){
+String getParam(String name) {
   //read parameter from server, for customhmtl input
   String value;
-  if(wm.server->hasArg(name)) {
+  if (wm.server->hasArg(name)) {
     value = wm.server->arg(name);
   }
   return value;
 }
 
-void saveParamCallback(){
+void saveParamCallback() {
   Serial.println("[CALLBACK] saveParamCallback fired");
   Serial.println("PARAM customfieldid = " + getParam("customfieldid"));
 }
@@ -431,13 +400,13 @@ void setup() {
   // add a custom input field
   int customFieldLength = 40;
 
- // test custom html(radio)
+  // test custom html(radio)
   const char* custom_radio_str = "<br/><label for='customfieldid'>Custom Field Label</label><input type='radio' name='customfieldid' value='1' checked> One<br><input type='radio' name='customfieldid' value='2'> Two<br><input type='radio' name='customfieldid' value='3'> Three";
-  new (&custom_field) WiFiManagerParameter(custom_radio_str); // custom html input
-  
+  new (&custom_field) WiFiManagerParameter(custom_radio_str);  // custom html input
+
   wm.addParameter(&custom_field);
   wm.setSaveParamsCallback(saveParamCallback);
-  std::vector<const char *> menu = {"wifi","info","param","sep","restart","exit"};
+  std::vector<const char*> menu = { "wifi", "info", "param", "sep", "restart", "exit" };
   wm.setMenu(menu);
 
   // set dark theme
@@ -445,14 +414,13 @@ void setup() {
   bool res;
   // res = wm.autoConnect(); // auto generated AP name from chipid
   // res = wm.autoConnect("AutoConnectAP"); // anonymous ap
-  res = wm.autoConnect("AutoConnectAP","password"); // password protected ap
+  res = wm.autoConnect("AutoConnectAP", "password");  // password protected ap
 
-  if(!res) {
+  if (!res) {
     Serial.println("Failed to connect or hit timeout");
     // ESP.restart();
-  } 
-  else {
-    //if you get here you have connected to the WiFi    
+  } else {
+    //if you get here you have connected to the WiFi
     Serial.println("connected...yeey :)");
   }
 
