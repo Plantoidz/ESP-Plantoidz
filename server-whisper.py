@@ -4,6 +4,81 @@ import numpy as np
 import asyncio
 import websockets
 import wave
+# import ffmpeg
+# import traceback
+import logging
+from pydub import AudioSegment
+from io import BytesIO
+
+# import whisper
+from faster_whisper import WhisperModel
+
+# model = whisper.load_model('base.en')
+# model = WhisperModel("large-v2",  compute_type="auto")
+model = WhisperModel("small",  compute_type="auto")
+
+
+async def save_and_transcribe(audio_data):
+        timestamp = time.strftime("%Y-%m-%dT%H-%M-%S", time.gmtime())
+        original_file_name = f"tmp/original_{timestamp}.wav"
+        with wave.open(original_file_name, "wb") as wav_file:
+                wav_file.setnchannels(2)
+                wav_file.setsampwidth(2)
+                wav_file.setframerate(8000)
+                wav_file.writeframes(audio_data)
+        logging.info(f"Original audio file saved as {original_file_name}")
+
+        audio = AudioSegment.from_raw(BytesIO(audio_data), sample_width=2, frame_rate=8000, channels=2)
+        mono_audio = audio.set_channels(1)
+        resampled_audio = mono_audio.set_frame_rate(8000)
+        resampled_file_name = f"tmp/resampled_{timestamp}.wav"
+        resampled_audio.export(resampled_file_name, format="wav")
+        logging.info(f"Resampled audio file saved as {resampled_file_name}")
+
+        segments, info = model.transcribe(resampled_file_name, beam_size=5)
+        # segments = model.transcribe(resampled_file_name, beam_size=5)
+
+        print("Detected language '%s' with probability %f" % (info.language, info.language_probability))
+
+        for segment in segments:
+                print("[%.2fs -> %.2fs] %s" % (segment.start, segment.end, segment.text))
+                # print(segment)
+        
+
+# def process_wav_bytes(webm_bytes: bytes, sample_rate: int = 16000):
+#         wf = wave.open("output.wav", 'wb')
+#         wf.setnchannels(1)
+#         p = pyaudio.PyAudio()
+#         wf.setsampwidth(p.get_sample_size(pyaudio.paInt16))
+#         wf.setframerate(16000)
+#         wf.writeframes(webm_bytes)
+#         wf.close()
+#         waveform = whisper.audio.load_audio("output.wav", sr=sample_rate)
+        
+#         return waveform
+        
+# async def transcribe_socket(ws):
+#         while not ws.closed:
+#                 message = await ws.recv()
+#                 if message:
+#                         print('message received', len(message), type(message))
+#                 try:
+#                         if isinstance(message, str):
+#                                 message = base64.b64decode(message)
+                        
+#                         audio = process_wav_bytes(bytes(message)).reshape(1, -1)
+#                         # audio = process_wav_bytes(audio)
+#                         # audio = load_audio(audio, 16000)
+                        
+#                         audio = whisper.pad_or_trim(audio)
+#                         transcription = whisper.transcribe(
+#                         model,
+#                         audio
+#                         )
+#                         print("************************************************************** " , transcription)
+#                 except Exception as e:
+#                         traceback.print_exc()
+
 
 INIT = 0
 FILE = "test.wav"
@@ -15,8 +90,11 @@ def register_esp(esp, ws):  # registration function for associating socket to es
         agents.append( { "id": esp, "ws": ws })
 
 def unregister_esp(esp):
+        print("UN-REGISTERING ESP " + esp)
+        i = 0
         for a in agents:
-                if a["id"] == esp: agents.pop(a)
+                if a["id"] == esp: agents.pop(i)
+                i = i+1
 
 
 CHUNK_SIZE = 1024
@@ -74,10 +152,24 @@ async def websocket_handler(websocket, path):
 
         # actual code of the server listening to the socket from the ESP, and managing it (right now just playing it for fun)
 
+        audio_data = bytearray()
+
         try:
-                async for message in websocket:
-                        audio_data = np.frombuffer(message, dtype=np.int16)
-                        stream.write(audio_data.tobytes())
+                # async for message in websocket:
+                #         audio_data = np.frombuffer(message, dtype=np.int16)
+                        # stream.write(audio_data.tobytes())
+                        # await transcribe_socket(websocket)
+                        
+                async for msg in websocket:
+        
+                        audio_data.extend(msg)
+        
+                        if len(audio_data) >= 32000 * 2 * 2:
+                                current_audio_data = audio_data.copy()
+                                audio_data = bytearray()
+                
+                                asyncio.create_task(save_and_transcribe(current_audio_data))
+
 
         finally:
                 stream.stop_stream()
@@ -106,11 +198,11 @@ async def switch_modes():
         
         ## dummy list of tasks to do to the various ESP
         tasks = [ 
-                { "esp": "3", "mode": 3, "arg": "test.wav" },
-                { "esp": "4", "mode": 3, "arg": "two.wav" },
+                # { "esp": "3", "mode": 3, "arg": "test.wav" },
+                # { "esp": "4", "mode": 3, "arg": "two.wav" },
                 { "esp": "3", "mode": 1, "arg": None },
-                { "esp": "3", "mode": 3, "arg": "three.wav" },
-                { "esp": "3", "mode": 1, "arg": None },
+                # { "esp": "3", "mode": 3, "arg": "three.wav" },
+                # { "esp": "4", "mode": 1, "arg": None },
 
                 # { "esp": 4, "mode": 3, "arg": "esp2.wav" },
                 # { "esp": 4, "mode": 1 },

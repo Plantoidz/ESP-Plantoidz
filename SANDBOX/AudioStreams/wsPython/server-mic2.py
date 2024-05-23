@@ -19,7 +19,13 @@ stream = audio.open(format=pyaudio.paInt16,
 
 async def websocket_handler(websocket, path):
 
-    asyncio.create_task(send(websocket))
+
+    esp_id = await websocket.recv();
+    print("Welcome to " , esp_id) 
+    
+    await websocket.send("1")
+    
+    #  asyncio.create_task(send(websocket))
 
     try:
         async for message in websocket:
