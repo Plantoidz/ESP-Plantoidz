@@ -33,4 +33,5 @@ COTé MATERIEL:
 - boitier
 
   PINOUT:
+  compatible entre olimex et esp dev kit
 
