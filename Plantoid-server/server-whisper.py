@@ -24,13 +24,13 @@ async def save_and_transcribe(audio_data):
         with wave.open(original_file_name, "wb") as wav_file:
                 wav_file.setnchannels(2)
                 wav_file.setsampwidth(2)
-                wav_file.setframerate(8000)
+                wav_file.setframerate(16000)
                 wav_file.writeframes(audio_data)
         logging.info(f"Original audio file saved as {original_file_name}")
 
-        audio = AudioSegment.from_raw(BytesIO(audio_data), sample_width=2, frame_rate=8000, channels=2)
+        audio = AudioSegment.from_raw(BytesIO(audio_data), sample_width=2, frame_rate=16000, channels=2)
         mono_audio = audio.set_channels(1)
-        resampled_audio = mono_audio.set_frame_rate(8000)
+        resampled_audio = mono_audio.set_frame_rate(16000)
         resampled_file_name = f"tmp/resampled_{timestamp}.wav"
         resampled_audio.export(resampled_file_name, format="wav")
         logging.info(f"Resampled audio file saved as {resampled_file_name}")
