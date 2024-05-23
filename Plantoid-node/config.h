@@ -2,9 +2,9 @@
 bool serialDebug = false;
 
 // we define the button pin for wifimanager
-#define TRIGGER_PIN 34               // !!!! 34 for olimex ,33 esp32 dev kit
+#define TRIGGER_PIN 34                // !!!! 34 for olimex ,33 esp32 dev kit
 const char* apPassword = "password";  // password used for the acces point
-#define portalDelay 120              // timeout for the ap to retry connection
+#define portalDelay 120               // timeout for the ap to retry connection
 bool wm_nonblocking = false;          // change to true to use non blocking
 WiFiManager wm;                       // global wm instance
 WiFiManagerParameter custom_field;    // global param ( for non blocking w params )
