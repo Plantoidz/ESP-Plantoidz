@@ -35,7 +35,7 @@ async def save_and_transcribe(audio_data):
         resampled_audio.export(resampled_file_name, format="wav")
         logging.info(f"Resampled audio file saved as {resampled_file_name}")
 
-        segments, info = model.transcribe(resampled_file_name, beam_size=5)
+        segments, info = model.transcribe(resampled_file_name, beam_size=5, language="en")
         # segments = model.transcribe(resampled_file_name, beam_size=5)
 
         print("Detected language '%s' with probability %f" % (info.language, info.language_probability))
