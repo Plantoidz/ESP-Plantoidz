@@ -18,11 +18,21 @@ Arduino Websockets: 0.5.3
 https://github.com/gilmaimon/ArduinoWebsockets
 */
 // time to load the libs.
+#include <Arduino.h>
 #include <FastLED.h>
 #include <driver/i2s.h>
 #include <WiFi.h>
 #include <ArduinoWebsockets.h>
-#include <WiFiManager.h>                                  // https://github.com/tzapu/WiFiManager
+#include <WiFiManager.h>  // https://github.com/tzapu/WiFiManager
+
+
+
+// we define the button pin for wifimanager
+#define TRIGGER_PIN 34
+const char* apPassword = "password";   // password used for the acces point
+bool wm_nonblocking = false;        // change to true to use non blocking
+WiFiManager wm;                     // global wm instance
+WiFiManagerParameter custom_field;  // global param ( for non blocking w params )
 
 //we define a UID
 #define ESP_ID 3
@@ -154,6 +164,8 @@ void LED_loop() {
 }
 
 void loop() {
+  if(wm_nonblocking) wm.process(); // avoid delays() in loop when non-blocking and other long running code  
+  checkButton();
   if (client_mic.available()) { client_mic.poll(); }
   // if(client_amp.available()) { client_amp.poll(); }
 
@@ -206,6 +218,7 @@ void connectWSServer_mic() {
   while (!client_mic.connect(websocket_server_host, websocket_server_port_mic, "/")) {
     delay(500);
     Serial.print(".");
+      checkButton();
   }
   Serial.println("Websocket Connected to the mic server!");
   client_mic.send(String(ESP_ID));
@@ -217,6 +230,7 @@ void connectWSServer_amp() {
   while (!client_amp.connect(websocket_server_host, websocket_server_port_amp, "/")) {
     delay(500);
     Serial.print(".");
+      checkButton();
   }
   Serial.println("Websocket Connected to the amp server!");
 }
@@ -314,7 +328,7 @@ void setup_LEDs() {
   // so that colors can be more accurately rendered through the 'temperature' profiles
   FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);
   FastLED.setBrightness(BRIGHTNESS);
-  LED_function = LED_listen; //put the leds in initialy in listen mode
+  LED_function = LED_listen;  //put the leds in initialy in listen mode
 }
 
 void LED_listen() {
@@ -359,11 +373,91 @@ void fadeall() {
 void LED_think() {
 }
 
+void checkButton(){
+  // check for button press
+  if ( digitalRead(TRIGGER_PIN) == LOW ) {
+    // poor mans debounce/press-hold, code not ideal for production
+    delay(50);
+    if( digitalRead(TRIGGER_PIN) == LOW ){
+      Serial.println("Button Pressed");
+      // still holding button for 3000 ms, reset settings, code not ideaa for production
+      delay(3000); // reset delay hold
+      if( digitalRead(TRIGGER_PIN) == LOW ){
+        Serial.println("Button Held");
+        Serial.println("Erasing Config, restarting");
+        wm.resetSettings();
+        ESP.restart();
+      }
+      
+      // start portal w delay
+      Serial.println("Starting config portal");
+      wm.setConfigPortalTimeout(120);
+      
+      if (!wm.startConfigPortal("UnconfiguredPlantoid",apPassword)) {
+        Serial.println("failed to connect or hit timeout");
+        delay(3000);
+        // ESP.restart();
+      } else {
+        //if you get here you have connected to the WiFi
+        Serial.println("connected...yeey :)");
+      }
+    }
+  }
+}
+
+
+String getParam(String name){
+  //read parameter from server, for customhmtl input
+  String value;
+  if(wm.server->hasArg(name)) {
+    value = wm.server->arg(name);
+  }
+  return value;
+}
+
+void saveParamCallback(){
+  Serial.println("[CALLBACK] saveParamCallback fired");
+  Serial.println("PARAM customfieldid = " + getParam("customfieldid"));
+}
+
 void setup() {
-  delay(100);  // power-up safety delay
+  delay(100);           // power-up safety delay
+  WiFi.mode(WIFI_STA);  // explicitly set mode, esp defaults to STA+AP
   Serial.begin(115200);
+  Serial.setDebugOutput(true);
+  delay(3000);
+  pinMode(TRIGGER_PIN, INPUT);
+  if (wm_nonblocking) wm.setConfigPortalBlocking(false);
+  // add a custom input field
+  int customFieldLength = 40;
+
+ // test custom html(radio)
+  const char* custom_radio_str = "<br/><label for='customfieldid'>Custom Field Label</label><input type='radio' name='customfieldid' value='1' checked> One<br><input type='radio' name='customfieldid' value='2'> Two<br><input type='radio' name='customfieldid' value='3'> Three";
+  new (&custom_field) WiFiManagerParameter(custom_radio_str); // custom html input
+  
+  wm.addParameter(&custom_field);
+  wm.setSaveParamsCallback(saveParamCallback);
+  std::vector<const char *> menu = {"wifi","info","param","sep","restart","exit"};
+  wm.setMenu(menu);
+
+  // set dark theme
+  wm.setClass("invert");
+  bool res;
+  // res = wm.autoConnect(); // auto generated AP name from chipid
+  // res = wm.autoConnect("AutoConnectAP"); // anonymous ap
+  res = wm.autoConnect("AutoConnectAP","password"); // password protected ap
+
+  if(!res) {
+    Serial.println("Failed to connect or hit timeout");
+    // ESP.restart();
+  } 
+  else {
+    //if you get here you have connected to the WiFi    
+    Serial.println("connected...yeey :)");
+  }
+
   setup_LEDs();
-  connectWiFi();
+  //connectWiFi();
   connectWSServer_mic();
   // connectWSServer_amp();
   set_modality(MODE_IDLE);
