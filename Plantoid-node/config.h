@@ -1,4 +1,8 @@
-// we define if we want serial debuf
+/*
+CONFIG FILE
+*/
+
+// we define if we want serial debug
 bool serialDebug = false;
 
 // we define the button pin for wifimanager

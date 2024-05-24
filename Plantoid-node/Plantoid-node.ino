@@ -6,79 +6,105 @@ ESP32-S3 DevKit-C
 OLIMER ESP32 POE
 */
 
-// time to load the libs.
+// time to load the libs. , configs and generic functions
 #include "includes.h"  //this needs to be first, or it all crashes and burns...
-// time to load the config
 #include "config.h"
-
-// WS STUFF
-using namespace websockets;
-WebsocketsClient client_mic;
-WebsocketsClient client_amp;
-bool isWebSocketConnected_mic;
-bool isWebSocketConnected_amp;
-TaskHandle_t i2smicTask;
-
+#include "wsSetup.h"
+#include "i2sSetup.h"
+#include "i2sFunctions.h"
+//#include "ledFunctions.h"
+//#include "wFunctions.h"
+#include "wmFunctions.h"
 int MODE = 0;            //MODE_IDLE 0, MODE_LISTEN 1, MODE_THINK 2, MODE_SPEAK 3
 void (*LED_function)();  // ????
 
-// I2S SETUPS
-
-const i2s_config_t i2s_config_rx = {
-  .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX),
-  // .sample_rate = 44100,
-  .sample_rate = 16000,
-  .bits_per_sample = i2s_bits_per_sample_t(16),
-  .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
-  .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S),
-  .intr_alloc_flags = 0,
-  .dma_buf_count = bufferCnt,
-  .dma_buf_len = bufferLen,
-  .use_apll = false
-};
-const i2s_pin_config_t pin_config_rx = {
-  .bck_io_num = I2S_SCK,
-  .ws_io_num = I2S_WS,
-  .data_out_num = -1,
-  .data_in_num = I2S_SD
-};
 
 
-const i2s_config_t i2s_config_tx = {
-  .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX),
-  .sample_rate = I2S_SAMPLE_RATE,
-  .bits_per_sample = i2s_bits_per_sample_t(I2S_SAMPLE_BITS),
-  .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
-  .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB),
-  .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
-  .dma_buf_count = 32,
-  .dma_buf_len = 64
-};
-const i2s_pin_config_t pin_config_tx = {
-  .bck_io_num = I2S_BCLK,
-  .ws_io_num = I2S_LRC,
-  .data_out_num = I2S_DOUT,
-  .data_in_num = -1,
-};
+void setup() {
+  delay(100);           // power-up safety delay
+  WiFi.mode(WIFI_STA);  // explicitly set mode, esp defaults to STA+AP
+  if (serialDebug) Serial.begin(115200);
+  if (serialDebug) Serial.setDebugOutput(true);
+  delay(3000);
+  ////////////////////////////////////////// config de wifimanager
+  pinMode(TRIGGER_PIN, INPUT_PULLUP);
+  if (wm_nonblocking) wm.setConfigPortalBlocking(false);
+  // add a custom input field
+  int customFieldLength = 40;
+  // test custom html(radio)
+  const char* custom_radio_str = "<br/><label for='customfieldid'>Custom Field Label</label><input type='radio' name='customfieldid' value='1' checked> One<br><input type='radio' name='customfieldid' value='2'> Two<br><input type='radio' name='customfieldid' value='3'> Three";
+  new (&custom_field) WiFiManagerParameter(custom_radio_str);  // custom html input
+  wm.addParameter(&custom_field);
+  wm.setSaveParamsCallback(saveParamCallback);
+  std::vector<const char*> menu = { "wifi", "info", "param", "sep", "restart", "exit" };
+  wm.setMenu(menu);
+  // set dark theme
+  wm.setClass("invert");
+  bool res;
+  res = wm.autoConnect("unconfiguredPlantoid", apPassword);  // password protected ap
 
-void i2s_TX_init(i2s_port_t i2sport) {
-  i2s_driver_install(i2sport, &i2s_config_tx, 0, NULL);
-  i2s_set_pin(i2sport, &pin_config_tx);
+  if (!res) {
+    if (serialDebug) Serial.println("Failed to connect or hit timeout");
+    // ESP.restart();
+  } else {
+    //if you get here you have connected to the WiFi
+    if (serialDebug) Serial.println("Pantoid connected... by wifi :)");
+  }
+////////////////////////////////////////////////////////////////////////////
+  setup_LEDs();
+  connectWSServer_mic();
+  set_modality(MODE_IDLE);
 }
 
-void i2s_RX_init(i2s_port_t i2sport) {
-  i2s_driver_install(i2sport, &i2s_config_rx, 0, NULL);
-  i2s_set_pin(i2sport, &pin_config_rx);
+void setup_LEDs() {
+  // It's important to set the color correction for your LED strip here,
+  // so that colors can be more accurately rendered through the 'temperature' profiles
+  FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);
+  FastLED.setBrightness(BRIGHTNESS);
+  LED_function = LED_listen;  //put the leds in initialy in listen mode
 }
 
-void i2s_RX_uninst() {
-  i2s_driver_uninstall(I2S_PORT_RX);
+void LED_listen() {
+  // draw a generic, no-name rainbow
+  static uint8_t starthue = 0;
+  fill_rainbow(leds, NUM_LEDS, --starthue, 20);
 }
 
-void i2s_TX_uninst() {
-  i2s_driver_uninstall(I2S_PORT_TX);
+void LED_speak() {
+  static uint8_t hue = 0;
+  if (serialDebug) Serial.print("@");
+  // First slide the led in one direction
+  for (int i = 0; i < NUM_LEDS; i++) {
+    // Set the i'th led to red
+    leds[i] = CHSV(hue++, 255, 255);
+    // Show the leds
+    FastLED.show();
+    // now that we've shown the leds, reset the i'th led to black
+    // leds[i] = CRGB::Black;
+    fadeall();
+    // Wait a little bit before we loop around and do it again
+    FastLED.delay(10);
+  }
+
+  // Now go in the other direction.
+  for (int i = (NUM_LEDS)-1; i >= 0; i--) {
+    // Set the i'th led to red
+    leds[i] = CHSV(hue++, 255, 255);
+    // Show the leds
+    FastLED.show();
+    // now that we've shown the leds, reset the i'th led to black
+    // leds[i] = CRGB::Black;
+    fadeall();
+    // Wait a little bit before we loop around and do it again
+    FastLED.delay(10);
+  }
+}
+void fadeall() {
+  for (int i = 0; i < NUM_LEDS; i++) { leds[i].nscale8(250); }
 }
 
+void LED_think() {
+}
 
 void LED_loop() {
   LED_function();
@@ -90,8 +116,6 @@ void loop() {
   if (wm_nonblocking) wm.process();  // avoid delays() in loop when non-blocking and other long running code
   checkButton();
   if (client_mic.available()) { client_mic.poll(); }
-
-
   LED_loop();
 }
 
@@ -121,9 +145,6 @@ void set_modality(int m) {
   }
 }
 
-void connectWiFi() {
-}
-
 // WEBSOCKETS STUFF
 void connectWSServer_mic() {
   client_mic.onEvent(onEventsCallback_mic);
@@ -147,8 +168,6 @@ void connectWSServer_amp() {
   }
   if (serialDebug) Serial.println("Websocket Connected to the amp server!");
 }
-
-// WEBSOCKET STUFF
 
 void onEventsCallback_mic(WebsocketsEvent event, String data) {
   if (event == WebsocketsEvent::ConnectionOpened) {
@@ -198,10 +217,7 @@ void onMessageCallback_amp(WebsocketsMessage message) {
   }
 }
 
-void i2s_write_data(char* buf_ptr, int buf_size) {
-  size_t i2s_bytes_write = 0;
-  i2s_write(I2S_PORT_TX, buf_ptr, buf_size, &i2s_bytes_write, portMAX_DELAY);
-}
+
 
 void micTask(void* parameter) {
   i2s_RX_init(I2S_PORT_RX);
@@ -234,132 +250,5 @@ void ampTask(void* parameter) {
   }
 }
 
-// LED STUFF
 
-void setup_LEDs() {
-  // It's important to set the color correction for your LED strip here,
-  // so that colors can be more accurately rendered through the 'temperature' profiles
-  FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);
-  FastLED.setBrightness(BRIGHTNESS);
-  LED_function = LED_listen;  //put the leds in initialy in listen mode
-}
 
-void LED_listen() {
-  // draw a generic, no-name rainbow
-  static uint8_t starthue = 0;
-  fill_rainbow(leds, NUM_LEDS, --starthue, 20);
-}
-
-void LED_speak() {
-  static uint8_t hue = 0;
-  if (serialDebug) Serial.print("@");
-  // First slide the led in one direction
-  for (int i = 0; i < NUM_LEDS; i++) {
-    // Set the i'th led to red
-    leds[i] = CHSV(hue++, 255, 255);
-    // Show the leds
-    FastLED.show();
-    // now that we've shown the leds, reset the i'th led to black
-    // leds[i] = CRGB::Black;
-    fadeall();
-    // Wait a little bit before we loop around and do it again
-    delay(10);
-  }
-
-  // Now go in the other direction.
-  for (int i = (NUM_LEDS)-1; i >= 0; i--) {
-    // Set the i'th led to red
-    leds[i] = CHSV(hue++, 255, 255);
-    // Show the leds
-    FastLED.show();
-    // now that we've shown the leds, reset the i'th led to black
-    // leds[i] = CRGB::Black;
-    fadeall();
-    // Wait a little bit before we loop around and do it again
-    delay(10);
-  }
-}
-void fadeall() {
-  for (int i = 0; i < NUM_LEDS; i++) { leds[i].nscale8(250); }
-}
-
-void LED_think() {
-}
-
-void checkButton() {
-  // check for button press
-  if (digitalRead(TRIGGER_PIN) == LOW) {
-    // poor mans debounce/press-hold, code not ideal for production
-    delay(50);
-    if (digitalRead(TRIGGER_PIN) == LOW) {
-      if (serialDebug) Serial.println("Button Pressed");
-      // still holding button for 3000 ms, reset settings, code not ideaa for production
-      delay(3000);  // reset delay hold
-      if (digitalRead(TRIGGER_PIN) == LOW) {
-        if (serialDebug) Serial.println("Button Held");
-        if (serialDebug) Serial.println("Erasing Config, restarting");
-        wm.resetSettings();
-        ESP.restart();
-      }
-      // start portal w delay
-      if (serialDebug) Serial.println("Starting config portal");
-      wm.setConfigPortalTimeout(portalDelay);
-      if (!wm.startConfigPortal("UnconfiguredPlantoid", apPassword)) {
-        if (serialDebug) Serial.println("failed to connect or hit timeout");
-        delay(3000);
-      } else {
-        //if you get here you have connected to the WiFi
-        if (serialDebug) Serial.println("connected...yeey :)");
-      }
-    }
-  }
-}
-
-String getParam(String name) {
-  //read parameter from server, for customhmtl input
-  String value;
-  if (wm.server->hasArg(name)) {
-    value = wm.server->arg(name);
-  }
-  return value;
-}
-
-void saveParamCallback() {
-  if (serialDebug) Serial.println("[CALLBACK] saveParamCallback fired");
-  if (serialDebug) Serial.println("PARAM customfieldid = " + getParam("customfieldid"));
-}
-
-void setup() {
-  delay(100);           // power-up safety delay
-  WiFi.mode(WIFI_STA);  // explicitly set mode, esp defaults to STA+AP
-  if (serialDebug) Serial.begin(115200);
-  if (serialDebug) Serial.setDebugOutput(true);
-  delay(3000);
-  pinMode(TRIGGER_PIN, INPUT_PULLUP);
-  if (wm_nonblocking) wm.setConfigPortalBlocking(false);
-  // add a custom input field
-  int customFieldLength = 40;
-  // test custom html(radio)
-  const char* custom_radio_str = "<br/><label for='customfieldid'>Custom Field Label</label><input type='radio' name='customfieldid' value='1' checked> One<br><input type='radio' name='customfieldid' value='2'> Two<br><input type='radio' name='customfieldid' value='3'> Three";
-  new (&custom_field) WiFiManagerParameter(custom_radio_str);  // custom html input
-  wm.addParameter(&custom_field);
-  wm.setSaveParamsCallback(saveParamCallback);
-  std::vector<const char*> menu = { "wifi", "info", "param", "sep", "restart", "exit" };
-  wm.setMenu(menu);
-  // set dark theme
-  wm.setClass("invert");
-  bool res;
-  res = wm.autoConnect("unconfiguredPlantoid", apPassword);  // password protected ap
-
-  if (!res) {
-    if (serialDebug) Serial.println("Failed to connect or hit timeout");
-    // ESP.restart();
-  } else {
-    //if you get here you have connected to the WiFi
-    if (serialDebug) Serial.println("Pantoid connected... by wifi :)");
-  }
-
-  setup_LEDs();
-  connectWSServer_mic();
-  set_modality(MODE_IDLE);
-}
