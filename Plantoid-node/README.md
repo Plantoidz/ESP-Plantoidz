@@ -20,23 +20,34 @@ COTé MATERIEL:
 
     board utilisée pour les essais initiaux : esp32 dev kit de base
 
-    premier prototype avec olimex esp32-poe: fait
-
     ref micro: inmp441
 
     ref de l'ampli utilisé: Max98357
 
     nombre de leds max envisagé: 25 (ws2812)
 
-    conso maxi possible sue le poe du olimex esp32-poe: mesures à venir
-
     à faire:
 
-    prise en charge de capteurs et d'actionneurs (touch sensors,servomoteurs) au niveau de l'esp (meme si la partie moteur reste limité avec le nombre de watts maxi en mode poe)
+    prise en charge de capteurs et d'actionneurs (touch sensors,servomoteurs) au niveau de l'esp (meme si la partie moteur reste limité avec le nombre de watts maxi en mode poe),pins à détéerminer
 
-    pcb
+    pcb, schema de cabalge
 
-    boitier
+    boitier, design, impression 3d
 
-    PINOUT: compatible entre olimex et esp dev kit
+    PINOUT: 
+    
+// we define the button pin for wifimanager
+#define TRIGGER_PIN 34                // !!!! 34 for olimex ,33 esp32 dev kit
+    
+// AMP I2S CONNECTIONS
+#define I2S_DOUT 13
+#define I2S_BCLK 14  // this should be the same as I2S_SCK for the mic
+#define I2S_LRC 15   // this should be the same as I2S_WS for the mic
 
+// MIC I2S CONNECTIONS
+#define I2S_SD 2
+#define I2S_WS 15
+#define I2S_SCK 14
+
+// Information about the LED strip itself
+#define LED_PIN 4
