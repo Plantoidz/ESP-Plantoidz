@@ -2,3 +2,4 @@ Plantoid-server/tmp/
 Plantoid-server/tmp/*
 Plantoid-server/tmp/**
 
+.env

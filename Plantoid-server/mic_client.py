@@ -1,52 +1,71 @@
 import pyaudio
-import asyncio
-import websockets
+import websocket
+import logging
+import threading
 
-def record_microphone(stream):
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Define the port number as a variable
+PORT = 8888
+
+# Define the WebSocketApp
+ws_app = None
+
+def record_microphone(stream, ws):
     CHUNK = 1024
     while True:
         data = stream.read(CHUNK)
-        print("running..")
-        yield data
-        
+        logging.info("Recording audio chunk")
+        ws.send(data, websocket.ABNF.OPCODE_BINARY)
+        logging.info("Sent audio data to websocket server")
 
-async def on_message(ws):
-	while True:
-		print("waiting for message")
-		message = await ws.recv()
-		print("got --> ", message)
-		await asyncio.sleep(1)
+def on_message(ws, message):
+    logging.info(f"Received message: {message}")
 
-async def send_audio():
-    async with websockets.connect('ws://localhost:8888') as ws:
-        
-        await ws.send("1")
-        asyncio.create_task(on_message(ws))
+def on_error(ws, error):
+    logging.error(f"An error occurred: {error}")
 
-        p = pyaudio.PyAudio()
-        # obtain the index of available mic
-        mic_device_index = None
-        # for i in range(p.get_device_count()):
-        #     device_info = p.get_device_info_by_index(i)
-        #     if device_info['maxInputChannels'] > 0:
-        #         mic_device_index = i
-        #         break
+def on_close(ws, close_status_code, close_msg):
+    logging.info("WebSocket connection closed")
 
-        # if mic_device_index is None:
-        #     print("there is no mic")
-        #     return
+def on_open(ws):
+    logging.info(f"Connected to WebSocket server at ws://localhost:{PORT}")
+    ws.send("1")
+    logging.info("Sent initial message '1' to WebSocket server")
 
-        stream = p.open(format=pyaudio.paInt16,
-                        channels=1,
-                        rate=32000,
-                        input=True,
-                        frames_per_buffer=1024,
-                        input_device_index=mic_device_index)
+    p = pyaudio.PyAudio()
 
-        for data in record_microphone(stream):
-            await ws.send(data)
-        
+    # Obtain the index of available mic
+    mic_device_index = None
+    # for i in range(p.get_device_count()):
+    #     device_info = p.get_device_info_by_index(i)
+    #     if device_info['maxInputChannels'] > 0:
+    #         mic_device_index = i
+    #         break
 
+    # if mic_device_index is None:
+    #     logging.error("No microphone found")
+    #     return
 
-asyncio.get_event_loop().run_until_complete(send_audio())
-#asyncio.run(send_audio())
+    stream = p.open(format=pyaudio.paInt16,
+                    channels=1,
+                    rate=32000,
+                    input=True,
+                    frames_per_buffer=1024,
+                    input_device_index=mic_device_index)
+
+    logging.info("Microphone stream opened")
+
+    threading.Thread(target=record_microphone, args=(stream, ws)).start()
+
+if __name__ == "__main__":
+    websocket.enableTrace(False)
+    uri = f'ws://localhost:{PORT}'
+    ws_app = websocket.WebSocketApp(uri,
+                                    on_message=on_message,
+                                    on_error=on_error,
+                                    on_close=on_close)
+    ws_app.on_open = on_open
+
+    ws_app.run_forever()
