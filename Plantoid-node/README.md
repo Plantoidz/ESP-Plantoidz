@@ -36,18 +36,18 @@ COTé MATERIEL:
 
     PINOUT: 
     
-// we define the button pin for wifimanager
-#define TRIGGER_PIN 34                // !!!! 34 for olimex ,33 esp32 dev kit
+    // we define the button pin for wifimanager
+    #define TRIGGER_PIN 34                // !!!! 34 for olimex ,33 esp32 dev kit
     
-// AMP I2S CONNECTIONS
-#define I2S_DOUT 13
-#define I2S_BCLK 14  // this should be the same as I2S_SCK for the mic
-#define I2S_LRC 15   // this should be the same as I2S_WS for the mic
+    // AMP I2S CONNECTIONS
+    #define I2S_DOUT 13
+    #define I2S_BCLK 14  // this should be the same as I2S_SCK for the mic
+    #define I2S_LRC 15   // this should be the same as I2S_WS for the mic
 
-// MIC I2S CONNECTIONS
-#define I2S_SD 2
-#define I2S_WS 15
-#define I2S_SCK 14
+    // MIC I2S CONNECTIONS
+    #define I2S_SD 2
+    #define I2S_WS 15
+    #define I2S_SCK 14
 
-// Information about the LED strip itself
-#define LED_PIN 4
+    // Information about the LED strip itself
+    #define LED_PIN 4
