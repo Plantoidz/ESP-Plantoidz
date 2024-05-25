@@ -3,11 +3,8 @@ void micTask(void* parameter);
 void onEventsCallback_amp(WebsocketsEvent event, String data);
 void onEventsCallback_mic(WebsocketsEvent event, String data);
 void set_modality(int m);
-// include led suff*  
-
 
 void i2s_write_data(char* buf_ptr, int buf_size);
-
 
 // WEBSOCKETS STUFF
 
