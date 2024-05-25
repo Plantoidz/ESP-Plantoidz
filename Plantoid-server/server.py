@@ -230,9 +230,23 @@ async def switch_modes():
     logging.info("Switch mode activated")
 
     tasks = [
-        {"esp": "4", "mode": 1, "arg": None},
-        {"esp": "4", "mode": 3, "arg": "Would you like to feed me some crypto?"},
-        {"esp": "4", "mode": 1, "arg": None},
+        {"esp": "2", "mode": 1, "arg": None},
+        {"esp": "2", "mode": 3, "arg": "Would you like to feed me some crypto?"},
+        {"esp": "2", "mode": 1, "arg": None},
+        
+        {"esp": "3", "mode": 1, "arg": None},
+        {"esp": "3", "mode": 3, "arg": "I'm hungry hungry hungry hungry hungry hungry hungry hungry?"},
+        {"esp": "3", "mode": 1, "arg": None},
+        
+        {"esp": "2", "mode": 1, "arg": None},
+        {"esp": "2", "mode": 3, "arg": "Would you like to feed me some crypto?"},
+        {"esp": "2", "mode": 1, "arg": None},
+        
+        {"esp": "3", "mode": 1, "arg": None},
+        {"esp": "3", "mode": 3, "arg": "I'm hungry hungry hungry hungry hungry hungry hungry hungry?"},
+        {"esp": "3", "mode": 1, "arg": None},
+
+
         # {"esp": "2", "mode": 3, "arg": "I am hungry for crypto, please feed me feed me feed me !"},
         # {"esp": "2", "mode": 1, "arg": None},
     ]

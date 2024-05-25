@@ -14,7 +14,7 @@ WiFiManager wm;                       // global wm instance
 WiFiManagerParameter custom_field;    // global param ( for non blocking w params )
 
 //we define a UID
-#define ESP_ID 2
+#define ESP_ID 3
 
 // Information about the LED strip itself
 #define LED_PIN 4

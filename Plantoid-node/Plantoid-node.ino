@@ -82,6 +82,8 @@ void i2s_write_data(char* buf_ptr, int buf_size) {
   i2s_write(I2S_PORT_TX, buf_ptr, buf_size, &i2s_bytes_write, portMAX_DELAY);
 }
 
+
+
 void setup() {
   delay(100);           // power-up safety delay
   WiFi.mode(WIFI_STA);  // explicitly set mode, esp defaults to STA+AP
@@ -136,6 +138,15 @@ void set_modality(int m) {
 
   if (m == MODE_LISTEN) {
     if (serialDebug) Serial.println("Activating listening mode.");
+
+      // first unset the SPEAK mode
+    Serial.println("DELETING TX MODE");
+    i2s_TX_uninst();
+    if(i2sampTask != NULL) {
+      vTaskDelete(i2sampTask);
+      i2sampTask = NULL;
+    }
+
     MODE = MODE_LISTEN;
     LED_function = &LED_listen;
     xTaskCreatePinnedToCore(micTask, "micTask", 10000, NULL, 1, &i2smicTask, 1);
@@ -144,6 +155,7 @@ void set_modality(int m) {
   if (m == MODE_SPEAK) {
     if (serialDebug) Serial.println("Activating speaking mode.");
     // first unset the LISTEN mode
+    Serial.println("DELETING RX MODE");
     i2s_RX_uninst();
     if (i2smicTask != NULL) {
       vTaskDelete(i2smicTask);
@@ -152,7 +164,7 @@ void set_modality(int m) {
     // then activate the SPEAK mode
     MODE = MODE_SPEAK;
     LED_function = &LED_speak;
-    xTaskCreatePinnedToCore(ampTask, "ampTask", 10000, NULL, 1, NULL, 1);
+    xTaskCreatePinnedToCore(ampTask, "ampTask", 10000, NULL, 1, &i2sampTask, 1);
   }
 }
 
@@ -215,6 +227,7 @@ void ampTask(void* parameter) {
       if (msgLength > 0) {
         i2s_write_data((char*)message.c_str(), msgLength);
       } else {
+        Serial.println("DELETING AND UNINSTALLING THE TX MODE");
         i2s_TX_uninst();
         vTaskDelete(NULL);
       }
