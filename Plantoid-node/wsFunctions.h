@@ -6,6 +6,9 @@ void set_modality(int m);
 // include led suff*  
 
 
+void i2s_write_data(char* buf_ptr, int buf_size);
+
+
 // WEBSOCKETS STUFF
 
 void connectWSServer_amp() {
