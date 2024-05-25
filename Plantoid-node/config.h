@@ -49,8 +49,9 @@ int16_t sBuffer[bufferLen];
 #define MODE_LISTEN 1
 #define MODE_THINK 2
 #define MODE_SPEAK 3
+int MODE = 0;  // set initial modality to 0 | MODE_IDLE 0, MODE_LISTEN 1, MODE_THINK 2, MODE_SPEAK 3
 
-
+// server credentials to be put in the wifimanager
 const char* websocket_server_host = "192.168.0.104";  //!!! adress of the server ,must be stored in file sys. modifiable via wifimanager
 const uint16_t websocket_server_port_mic = 8888;      // <WEBSOCKET_SERVER_PORT> for the mic streaming
 const uint16_t websocket_server_port_amp = 7777;      // <WEBSOCKET_SERVER_PORT> for the sound streaming
