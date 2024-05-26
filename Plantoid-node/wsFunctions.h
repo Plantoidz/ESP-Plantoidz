@@ -9,7 +9,7 @@ void i2s_write_data(char* buf_ptr, int buf_size);
 
 void connectWSServer_amp() {
   client_amp.onEvent(onEventsCallback_amp);
-  while (!client_amp.connect(websocket_server_host, websocket_server_port_amp, "/")) {
+  while (!client_amp.connect(websocket_server_host, int(websocket_server_port_amp), "/")) {
     delay(500);
     if (serialDebug) Serial.print(".");
     checkButton();
@@ -68,9 +68,10 @@ void onMessageCallback_amp(WebsocketsMessage message) {
 void connectWSServer_mic() {
   client_mic.onEvent(onEventsCallback_mic);
   client_mic.onMessage(onMessageCallback_mic);
-  while (!client_mic.connect(websocket_server_host, websocket_server_port_mic, "/")) {
+     if (serialDebug) Serial.println("waiting for the ws server");
+  while (!client_mic.connect(websocket_server_host, int(websocket_server_port_mic), "/")) {
     delay(500);
-    if (serialDebug) Serial.println("waiting for the ws server");
+ 
     if (serialDebug) Serial.print(".");
     checkButton();
   }

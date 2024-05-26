@@ -5,16 +5,22 @@ CONFIG FILE
 // we define if we want serial debug
 bool serialDebug = true;
 
+
+
 // we define the button pin for wifimanager
-#define TRIGGER_PIN 32                // !!!! 34 for olimex ,33 esp32 dev kit
+#define TRIGGER_PIN 34                // !!!! 34 for olimex ,33 esp32 dev kit
 const char* apPassword = "password";  // password used for the acces point
 #define portalDelay 120               // timeout for the ap to retry connection
 bool wm_nonblocking = false;          // change to true to use non blocking
 WiFiManager wm;                       // global wm instance
+
 WiFiManagerParameter custom_field;    // global param ( for non blocking w params )
+WiFiManagerParameter custom_field2;    // global param ( for non blocking w params )
+WiFiManagerParameter custom_field3;    // global param ( for non blocking w params )
+WiFiManagerParameter custom_field4;    // global param ( for non blocking w params )
+
 static bool eth_connected = false;    // is eth connected ?
-//we define a UID
-#define ESP_ID 3
+
 
 // Information about the LED strip itself
 #define LED_PIN 4
@@ -52,6 +58,10 @@ int16_t sBuffer[bufferLen];
 int MODE = 0;  // set initial modality to 0 | MODE_IDLE 0, MODE_LISTEN 1, MODE_THINK 2, MODE_SPEAK 3
 
 // server credentials to be put in the wifimanager
-const char* websocket_server_host = "192.168.0.104";  //!!! adress of the server ,must be stored in file sys. modifiable via wifimanager
-const uint16_t websocket_server_port_mic = 8888;      // <WEBSOCKET_SERVER_PORT> for the mic streaming
-const uint16_t websocket_server_port_amp = 7777;      // <WEBSOCKET_SERVER_PORT> for the sound streaming
+ char* websocket_server_host = "192.168.0.104";  //!!! adress of the server ,must be stored in file sys. modifiable via wifimanager
+ char* websocket_server_port_mic = "8888";      // <WEBSOCKET_SERVER_PORT> for the mic streaming
+ char* websocket_server_port_amp = "7777";      // <WEBSOCKET_SERVER_PORT> for the sound streaming
+ //we define a UID
+ #define ESP_ID "3"
+
+
