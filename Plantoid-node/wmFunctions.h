@@ -69,7 +69,7 @@ void setupWm() {
   WiFi.mode(WIFI_STA);  // explicitly set mode, esp defaults to STA+AP
   delay(3000);
   Serial.println("\n Starting");
-    if (wm_nonblocking) wm.setConfigPortalBlocking(false);
+  if (wm_nonblocking) wm.setConfigPortalBlocking(false);
 
   // add custom input fields
   int plantidFieldLength = 5;
@@ -87,7 +87,7 @@ void setupWm() {
   wm.setSaveParamsCallback(saveParamCallback);
   std::vector<const char*> menu = { "wifi", "info", "param", "sep", "restart", "exit" };  // custom menu via vector
   wm.setMenu(menu);
-  wm.setClass("invert");          // set dark theme
+  wm.setClass("invert");  // set dark theme
   bool res;
   res = wm.autoConnect("UnconfiguredPlantoid", apPassword);  // password protected ap
   if (!res) {

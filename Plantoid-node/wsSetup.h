@@ -1,4 +1,5 @@
-// WS SETUP
+// WEBSOCKETS SETUP
+
 using namespace websockets;
 WebsocketsClient client_mic;
 WebsocketsClient client_amp;

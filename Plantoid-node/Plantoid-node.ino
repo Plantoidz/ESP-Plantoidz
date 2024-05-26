@@ -7,8 +7,8 @@ OLIMEX ESP32 POE
 */
 
 // time to load the libs. , configs and generic functions
-#include "includes.h"       //this needs to be first, or it all crashes and burns...
-#include "fsFunctions.h"    // yes, we have a filesystem
+#include "includes.h"     //this needs to be first, or it all crashes and burns...
+#include "fsFunctions.h"  // yes, we have a filesystem
 #include "config.h"
 #include "wmFunctions.h"
 #include "wsSetup.h"
@@ -18,21 +18,8 @@ OLIMEX ESP32 POE
 #include "wsFunctions.h"
 #include "ethFunctions.h"
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 void setup() {
-    if (!SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED)) {
+  if (!SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED)) {
     Serial.println("SPIFFS Mount Failed");
     return;
   }
