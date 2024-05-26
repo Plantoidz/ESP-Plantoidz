@@ -2,8 +2,7 @@
 CONFIG FILE
 */
 
-// we define if we want serial debug
-bool serialDebug = true;
+
 
 // we define the button pin for wifimanager
 #define TRIGGER_PIN 34                // !!!! 34 for olimex ,33 esp32 dev kit
@@ -55,9 +54,9 @@ int16_t sBuffer[bufferLen];
 #define MODE_SPEAK 3
 int MODE = 0;  // set initial modality to 0 | MODE_IDLE 0, MODE_LISTEN 1, MODE_THINK 2, MODE_SPEAK 3
 
-// server credentials to be put in the wifimanager
-char* websocket_server_host = "192.168.0.104";  //!!! adress of the server ,must be stored in file sys. modifiable via wifimanager
-char* websocket_server_port_mic = "8888";       // <WEBSOCKET_SERVER_PORT> for the mic streaming
-char* websocket_server_port_amp = "7777";       // <WEBSOCKET_SERVER_PORT> for the sound streaming
-//we define a UID
-#define ESP_ID "3"
+//we define the plant id based on conf file in the filesystem
+const char* ESP_ID = returnFile(SPIFFS, "/plantid.txt").c_str();
+// default server credentials to be put in the wifimanager
+const char* websocket_server_host = returnFile(SPIFFS, "/serverip.txt").c_str();   // adress of the server ,must be stored in file sys. modifiable via wifimanager
+const char* websocket_server_port_mic = returnFile(SPIFFS, "/port1.txt").c_str();  // <WEBSOCKET_SERVER_PORT> for the mic streaming
+const char* websocket_server_port_amp = returnFile(SPIFFS, "/port2.txt").c_str();  // <WEBSOCKET_SERVER_PORT> for the sound streaming

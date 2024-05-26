@@ -18,7 +18,8 @@ void checkButton() {
       // start portal w delay
       if (serialDebug) Serial.println("Starting config portal");
       wm.setConfigPortalTimeout(portalDelay);
-      if (!wm.startConfigPortal("UnconfiguredPlantoid", apPassword)) {
+      const char* tmp1 = ESP_ID;
+      if (!wm.startConfigPortal(tmp1, apPassword)) {
         if (serialDebug) Serial.println("failed to connect or hit timeout");
         delay(3000);
       } else {
@@ -68,7 +69,7 @@ void saveParamCallback() {
 void setupWm() {
   WiFi.mode(WIFI_STA);  // explicitly set mode, esp defaults to STA+AP
   delay(3000);
-  Serial.println("\n Starting");
+  if (serialDebug) Serial.println("\n Starting");
   if (wm_nonblocking) wm.setConfigPortalBlocking(false);
 
   // add custom input fields
@@ -89,11 +90,12 @@ void setupWm() {
   wm.setMenu(menu);
   wm.setClass("invert");  // set dark theme
   bool res;
-  res = wm.autoConnect("UnconfiguredPlantoid", apPassword);  // password protected ap
+  const char* tmp2 = ESP_ID;
+  res = wm.autoConnect(tmp2, apPassword);  // password protected ap
   if (!res) {
-    Serial.println("Failed to connect or hit timeout");
+    if (serialDebug) Serial.println("Failed to connect or hit timeout");
   } else {
     //if you get here you have connected to the WiFi
-    Serial.println("Pantoid connected... by wifi :)");
+    if (serialDebug) Serial.println("Pantoid connected... by wifi :)");
   }
 }

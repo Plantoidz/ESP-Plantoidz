@@ -20,7 +20,7 @@ OLIMEX ESP32 POE
 
 void setup() {
   if (!SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED)) {
-    Serial.println("SPIFFS Mount Failed");
+    if (serialDebug) Serial.println("SPIFFS Mount Failed");
     return;
   }
   delay(500);  // power-up safety delay
@@ -30,11 +30,11 @@ void setup() {
 
   // Add a handler for network events. This is misnamed "WiFi" because the ESP32 is historically WiFi only,
   // but in our case, this will react to Ethernet events.
-  Serial.print("Registering event handler for ETH events...");
+  if (serialDebug) Serial.print("Registering event handler for ETH events...");
   WiFi.onEvent(WiFiEvent);
 
   // Starth Ethernet (this does NOT start WiFi at the same time)
-  Serial.print("Starting ETH interface...");
+  if (serialDebug) Serial.print("Starting ETH interface...");
   ETH.begin();
   if (eth_connected == false) {
     setupWm();
@@ -60,7 +60,7 @@ void set_modality(int m) {
     if (serialDebug) Serial.println("Activating listening mode.");
 
     // first unset the SPEAK mode
-    Serial.println("DELETING TX MODE");
+    if (serialDebug) Serial.println("DELETING TX MODE");
     i2s_TX_uninst();
     if (i2sampTask != NULL) {
       vTaskDelete(i2sampTask);
@@ -75,7 +75,7 @@ void set_modality(int m) {
   if (m == MODE_SPEAK) {
     if (serialDebug) Serial.println("Activating speaking mode.");
     // first unset the LISTEN mode
-    Serial.println("DELETING RX MODE");
+    if (serialDebug) Serial.println("DELETING RX MODE");
     i2s_RX_uninst();
     if (i2smicTask != NULL) {
       vTaskDelete(i2smicTask);
@@ -112,7 +112,7 @@ void ampTask(void* parameter) {
         //message.c_str()=*2
         i2s_write_data((char*)message.c_str(), msgLength);
       } else {
-        Serial.println("DELETING AND UNINSTALLING THE TX MODE");
+        if (serialDebug) Serial.println("DELETING AND UNINSTALLING THE TX MODE");
         i2s_TX_uninst();
         vTaskDelete(NULL);
       }
