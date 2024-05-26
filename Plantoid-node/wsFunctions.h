@@ -1,12 +1,11 @@
+// WEBSOCKETS STUFF
+
 void ampTask(void* parameter);
 void micTask(void* parameter);
 void onEventsCallback_amp(WebsocketsEvent event, String data);
 void onEventsCallback_mic(WebsocketsEvent event, String data);
 void set_modality(int m);
-
 void i2s_write_data(char* buf_ptr, int buf_size);
-
-// WEBSOCKETS STUFF
 
 void connectWSServer_amp() {
   client_amp.onEvent(onEventsCallback_amp);
@@ -65,8 +64,6 @@ void onMessageCallback_amp(WebsocketsMessage message) {
     }
   }
 }
-
-
 
 void connectWSServer_mic() {
   client_mic.onEvent(onEventsCallback_mic);

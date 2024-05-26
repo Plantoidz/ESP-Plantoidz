@@ -1,7 +1,5 @@
 //I2S STUFF
 
-
-
 void i2s_TX_init(i2s_port_t i2sport) {
   i2s_driver_install(i2sport, &i2s_config_tx, 0, NULL);
   i2s_set_pin(i2sport, &pin_config_tx);

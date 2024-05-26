@@ -12,8 +12,6 @@ Ceci est la partie embarquée des nouvelles plantoids,
 à faire:
 
     nétoyage du code, 
-    faire fonctioner l'ethernet
-    mettre en place un systeme de configuration réseau type wifimanager
     stocker les constantes de la plante dans le systeme de fichier pour les éditer via l'interface du wifimanager
 
 COTé MATERIEL:

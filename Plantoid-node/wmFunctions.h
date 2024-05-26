@@ -1,4 +1,4 @@
-//WIFIMANAGER STUFF
+//WIFI MANAGER STUFF
 
 void checkButton() {
   // check for button press
