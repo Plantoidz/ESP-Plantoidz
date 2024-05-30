@@ -20,7 +20,7 @@ static bool eth_connected = false;  // is eth connected ?
 
 
 // Information about the LED strip itself
-#define LED_PIN 4
+#define LED_PIN 3
 #define NUM_LEDS 25
 #define CHIPSET WS2811
 #define COLOR_ORDER GRB
