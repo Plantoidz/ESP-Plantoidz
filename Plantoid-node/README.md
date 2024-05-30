@@ -12,7 +12,6 @@ Ceci est la partie embarquée des nouvelles plantoids,
 à faire:
 
     nétoyage du code, 
-    stocker les constantes de la plante dans le systeme de fichier pour les éditer via l'interface du wifimanager
 
 COTé MATERIEL:
 
