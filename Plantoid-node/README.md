@@ -25,11 +25,15 @@ COTé MATERIEL:
 
     à faire:
 
-    prise en charge de capteurs et d'actionneurs (touch sensors,servomoteurs) au niveau de l'esp (meme si la partie moteur reste limité avec le nombre de watts maxi en mode poe),pins à détéerminer
+     téster et mettre à l'épreuve l'ensemble.
 
-    pcb, schema de cabalge
+     téster l'ethernet
+     
+    prise en charge de capteurs et d'actionneurs (touch sensors,servomoteurs) au niveau de l'esp (meme si la partie moteur reste limité avec le nombre de watts maxi en mode poe),pins à détéerminer(cf. schéma de cablage) , 
 
-    boitier, design, impression 3d
+    pcb, schema de cabalge en cours , reste à metre à l'épreuve les prototypes
+
+    boitier, design, impression 3d en cours
 
     PINOUT: 
     
