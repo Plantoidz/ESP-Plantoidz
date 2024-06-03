@@ -37,8 +37,17 @@ void onEventsCallback_amp(WebsocketsEvent event, String data) {
     if (serialDebug) Serial.println("Connnection Opened for amp");
     isWebSocketConnected_amp = true;
   } else if (event == WebsocketsEvent::ConnectionClosed) {
+    
     if (serialDebug) Serial.println("Connnection Closed for amp");
+    // first unset the SPEAK mode
+    if (serialDebug) Serial.println("DELETING TX MODE");
+    i2s_TX_uninst();
+    if (i2sampTask != NULL) {
+      vTaskDelete(i2sampTask);
+      i2sampTask = NULL;
+    }
     isWebSocketConnected_amp = false;
+
   } else if (event == WebsocketsEvent::GotPing) {
     if (serialDebug) Serial.println("Got a Ping!");
   } else if (event == WebsocketsEvent::GotPong) {

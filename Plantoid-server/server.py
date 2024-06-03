@@ -97,6 +97,8 @@ def unregister_esp(esp):
 
 async def transcribe_audio(websocket, path):
     global INIT
+    global mictask
+    
     esp_id = await websocket.recv()
     logging.info(f"Welcome to {esp_id}")
     register_esp(esp_id, websocket)
@@ -180,9 +182,11 @@ async def send_stream_to_websocket(websocket, path):
     global PLAYBACK
     global mictask
     
-    if(mictask): 
-        logging.info("canceling the task:  ", mictask)
-        mictask.cancel()
+    # if(mictask): 
+    #     logging.info("!@#!@#!@#!@#@!#!@#!@#!@#!@#!@#!@#!@#@!#!@#!@#!@#!@#! canceling the task:  ", mictask)
+    #     mictask.cancel()
+    #     logging.info("!@#!@#!@#!@#@!#!@#!@#!@#!@#!@#!________________________ - new the task:  ", mictask)
+
     
     
     if PLAYBACK == None:
@@ -208,6 +212,9 @@ async def send_stream_to_websocket(websocket, path):
                 if(chunk_wav):
                     await websocket.send(chunk_wav)
                     logging.info(f"Sent audio stream chunk of size: {len(chunk_wav)} bytes")
+                    
+            # else: 
+            #     websocket.close()
                     
     except Exception as e:
         logging.error(f"An error occurred while sending audio stream: {e}")
@@ -237,27 +244,30 @@ async def switch_modes():
     logging.info("Switch mode activated")
 
     tasks = [
+        {"esp": "99", "mode": 3, "arg": "Hello I am alive !!"},
         {"esp": "98", "mode": 3, "arg": "Hello I am alive !!"},
-        {"esp": "98", "mode": 1, "arg": None},
-        {"esp": "98", "mode": 3, "arg": "Would you like to feed me some crypto?"},
-        {"esp": "2", "mode": 1, "arg": None},
+        {"esp": "95", "mode": 3, "arg": "Hello I am alive !!"},
+        {"esp": "94", "mode": 3, "arg": "Hello I am alive !!"},
+
+        # {"esp": "98", "mode": 1, "arg": None},
+        # {"esp": "97", "mode": 3, "arg": "Would you like to feed me some crypto?"},
+        # # {"esp": "98", "mode": 1, "arg": None},
         
-        {"esp": "98", "mode": 1, "arg": None},
-        {"esp": "98", "mode": 3, "arg": "I'm am a plantoid and i'm happy and i'm speaking to you, how ar you?"},
-        {"esp": "3", "mode": 1, "arg": None},
+        # {"esp": "97", "mode": 3, "arg": "I'm am a plantoid and i'm happy and i'm speaking to you, how ar you?"},
+        # # {"esp": "98", "mode": 1, "arg": None},
         
-        {"esp": "98", "mode": 1, "arg": None},
-        {"esp": "98", "mode": 3, "arg": "Would you like to feed me some crypto?"},
-        {"esp": "2", "mode": 1, "arg": None},
+        # {"esp": "97", "mode": 3, "arg": "Would you like to feed me some crypto?"},
+        # # {"esp": "98", "mode": 1, "arg": None},
         
-        {"esp": "3", "mode": 1, "arg": None},
-        {"esp": "3", "mode": 3, "arg": "I'm hungry hungry hungry hungry hungry hungry hungry hungry?"},
-        {"esp": "3", "mode": 1, "arg": None},
+        # {"esp": "99", "mode": 3, "arg": "I'm hungry hungry hungry hungry hungry hungry hungry hungry?"},
+        # {"esp": "98", "mode": 1, "arg": None},
 
 
-        {"esp": "2", "mode": 3, "arg": "I am hungry for crypto, please feed me feed me feed me !"},
-        {"esp": "2", "mode": 1, "arg": None},
+        # {"esp": "98", "mode": 3, "arg": "I am hungry for crypto, please feed me feed me feed me !"},
+        # {"esp": "98", "mode": 1, "arg": None},
     ]
+
+    await asyncio.sleep(4) #NOTE: mock
 
     for task in tasks:
         logging.info(f"Processing task: esp={task['esp']} mode={task['mode']}")
@@ -269,6 +279,8 @@ async def switch_modes():
                 break
 
         if ws is None:
+            continue
+        
             for a in agents:
                 if a["ws"]:
                     ws = a["ws"]
@@ -278,7 +290,7 @@ async def switch_modes():
         MODE = task["mode"]
         PLAYBACK = task["arg"]
         await ws.send(str(MODE))
-        await asyncio.sleep(7) #NOTE: mock
+        await asyncio.sleep(5) #NOTE: mock
 
 def main():
     logging.info("Starting server")
