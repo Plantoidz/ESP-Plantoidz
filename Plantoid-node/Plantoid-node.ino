@@ -113,12 +113,30 @@ void ampTask(void* parameter) {
     int msgLength = message.length();
     if (message.type() == MessageType::Binary) {
       if (msgLength > 0) {
-        //message.c_str()=*2
-        i2s_write_data((char*)message.c_str(), msgLength);
+
+        // i2s_write_data((char*)message.c_str(), msgLength);
+
+        // attempt at increasing volume
+
+        int16_t signedSample;
+        uint16_t i;
+        
+
+        const char* cstr = message.c_str();
+
+        for(i=0; i<message.length(); i+=2) {
+          signedSample = *((int16_t *) (cstr + i));
+          signedSample = signedSample * 12;
+          *((int16_t *) (cstr+i)) = signedSample;
+        }
+
+        i2s_write_data((char*)message.c_str(), msgLength);        
+
+      
       } else {
-        if (serialDebug) Serial.println("DELETING AND UNINSTALLING THE TX MODE");
-        i2s_TX_uninst();
-        vTaskDelete(NULL);
+          if (serialDebug) Serial.println("DELETING AND UNINSTALLING THE TX MODE");
+          i2s_TX_uninst();
+          vTaskDelete(NULL);
       }
     }
   }
