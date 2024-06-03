@@ -42,6 +42,7 @@ client = ElevenLabs(
   api_key=ELEVENLABS_API_KEY
 )
 
+mictask = None
 
 
 voice_id  = "K5W90fMZclFpp7zIpkCc"
@@ -112,7 +113,7 @@ async def transcribe_audio(websocket, path):
             if len(audio_data) >= 32000 * 2 * 2:
                 current_audio_data = audio_data.copy()
                 audio_data = bytearray()
-                asyncio.create_task(save_and_transcribe(current_audio_data))
+                mictask = asyncio.create_task(save_and_transcribe(current_audio_data))
     finally:
         stream.stop_stream()
         stream.close()
@@ -177,6 +178,12 @@ PLAYBACK = None
 
 async def send_stream_to_websocket(websocket, path):
     global PLAYBACK
+    global mictask
+    
+    if(mictask): 
+        logging.info("canceling the task:  ", mictask)
+        mictask.cancel()
+    
     
     if PLAYBACK == None:
         PLAYBACK = "Hello my name is plantoid i am a blockchain based life form"
@@ -230,16 +237,17 @@ async def switch_modes():
     logging.info("Switch mode activated")
 
     tasks = [
-        {"esp": "2", "mode": 1, "arg": None},
-        {"esp": "2", "mode": 3, "arg": "Would you like to feed me some crypto?"},
+        {"esp": "98", "mode": 3, "arg": "Hello I am alive !!"},
+        {"esp": "98", "mode": 1, "arg": None},
+        {"esp": "98", "mode": 3, "arg": "Would you like to feed me some crypto?"},
         {"esp": "2", "mode": 1, "arg": None},
         
-        {"esp": "3", "mode": 1, "arg": None},
-        {"esp": "3", "mode": 3, "arg": "I'm am a plantoid and i'm happy and i'm speaking to you, how ar you?"},
+        {"esp": "98", "mode": 1, "arg": None},
+        {"esp": "98", "mode": 3, "arg": "I'm am a plantoid and i'm happy and i'm speaking to you, how ar you?"},
         {"esp": "3", "mode": 1, "arg": None},
         
-        {"esp": "2", "mode": 1, "arg": None},
-        {"esp": "2", "mode": 3, "arg": "Would you like to feed me some crypto?"},
+        {"esp": "98", "mode": 1, "arg": None},
+        {"esp": "98", "mode": 3, "arg": "Would you like to feed me some crypto?"},
         {"esp": "2", "mode": 1, "arg": None},
         
         {"esp": "3", "mode": 1, "arg": None},
@@ -247,8 +255,8 @@ async def switch_modes():
         {"esp": "3", "mode": 1, "arg": None},
 
 
-        # {"esp": "2", "mode": 3, "arg": "I am hungry for crypto, please feed me feed me feed me !"},
-        # {"esp": "2", "mode": 1, "arg": None},
+        {"esp": "2", "mode": 3, "arg": "I am hungry for crypto, please feed me feed me feed me !"},
+        {"esp": "2", "mode": 1, "arg": None},
     ]
 
     for task in tasks:

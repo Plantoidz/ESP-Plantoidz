@@ -2,13 +2,19 @@ import websocket
 import logging
 import subprocess
 
+import pyaudio
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logging.getLogger().setLevel(logging.INFO)
 
 # Start MPV process with stdin enabled
-mpv_process = subprocess.Popen(['mpv', '--no-terminal', '--idle', '--force-seekable=no', '-'],
-                               stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+# mpv_process = subprocess.Popen(['mpv', '--no-terminal', '--idle', '--force-seekable=no', '-'],
+#                                stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+p = pyaudio.PyAudio()
+stream = p.open(output=True, format = pyaudio.paInt16, channels=1, rate = 16000)
+
 
 # Define the port number as a variable
 PORT = 7777
@@ -22,8 +28,9 @@ def on_message(ws, message):
     logging.info(f"Decoded audio chunk of size: {len(audio_chunk)} bytes")
 
     try:
-        mpv_process.stdin.write(audio_chunk)
-        mpv_process.stdin.flush()
+        # mpv_process.stdin.write(audio_chunk)
+        # mpv_process.stdin.flush()
+        stream.write(audio_chunk)
         
     except Exception as e:
         logging.error(f"Error while decoding or playing audio: {e}")

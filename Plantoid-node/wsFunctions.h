@@ -9,7 +9,7 @@ void i2s_write_data(char* buf_ptr, int buf_size);
 
 void connectWSServer_amp() {
   client_amp.onEvent(onEventsCallback_amp);
-  while (!client_amp.connect(websocket_server_host, int(websocket_server_port_amp), "/")) {
+  while (!client_amp.connect(websocket_server_host, atoi(websocket_server_port_amp), "/")) {
     delay(500);
     if (serialDebug) Serial.print(".");
     checkButton();
@@ -23,6 +23,7 @@ void onEventsCallback_mic(WebsocketsEvent event, String data) {
     isWebSocketConnected_mic = true;
   } else if (event == WebsocketsEvent::ConnectionClosed) {
     if (serialDebug) Serial.println("Connnection Closed for mic");
+    ESP.restart();
     isWebSocketConnected_mic = false;
   } else if (event == WebsocketsEvent::GotPing) {
     if (serialDebug) Serial.println("Got a Ping!");
@@ -67,7 +68,7 @@ void onMessageCallback_amp(WebsocketsMessage message) {
 
 void connectWSServer_mic() {
 
-  if (serialDebug) {
+   if (serialDebug) {
       Serial.print("connecting to IP server: ");
       Serial.print(websocket_server_host);
       Serial.print(" on port: ");
@@ -75,7 +76,7 @@ void connectWSServer_mic() {
 
       Serial.print("original file content: ");
       Serial.println(returnFile(SPIFFS, "/serverip.txt").c_str());
-  }
+   }
 
 
   client_mic.onEvent(onEventsCallback_mic);

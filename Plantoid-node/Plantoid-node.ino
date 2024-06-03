@@ -16,7 +16,7 @@ OLIMEX ESP32 POE
 #include "i2sFunctions.h"
 #include "ledFunctions.h"
 #include "wsFunctions.h"
-#include "ethFunctions.h"
+// #include "ethFunctions.h" @@@ETH
 
 void setup() {
   if (!SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED)) {
@@ -34,14 +34,15 @@ void setup() {
   // Add a handler for network events. This is misnamed "WiFi" because the ESP32 is historically WiFi only,
   // but in our case, this will react to Ethernet events.
   if (serialDebug) Serial.print("Registering event handler for ETH events...");
-  WiFi.onEvent(WiFiEvent);
+  // WiFi.onEvent(WiFiEvent);   @@@ETH
 
-  // Starth Ethernet (this does NOT start WiFi at the same time)
-  if (serialDebug) Serial.print("Starting ETH interface...");
-  ETH.begin();
-  if (eth_connected == false) {
-    setupWm();
-  }
+  // Starth Ethernet (this does NOT start WiFi at the same time). @@@ETH
+  // if (serialDebug) Serial.print("Starting ETH interface...");
+  // ETH.begin();
+  // if (eth_connected == false) {
+     setupWm();
+  // }
+
   setup_LEDs();
   connectWSServer_mic();
   set_modality(MODE_IDLE);

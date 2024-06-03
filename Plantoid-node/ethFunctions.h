@@ -5,7 +5,7 @@ void WiFiEvent(WiFiEvent_t event) {
       // This will happen during setup, when the Ethernet service starts
       if (serialDebug) Serial.println("ETH Started");
       //set eth hostname here
-      ETH.setHostname("esp32-ethernet");
+      ETH.setHostname("esp32-ethernet"); 
       break;
 
     case ARDUINO_EVENT_ETH_CONNECTED:

@@ -6,6 +6,6 @@ bool serialDebug = true;
 #include <Arduino.h>
 #include <FastLED.h>
 #include <driver/i2s.h>
-#include <ETH.h>
+// #include <ETH.h>  @@@ETH
 #include <ArduinoWebsockets.h>
 #include <WiFiManager.h>  // https://github.com/tzapu/WiFiManager
