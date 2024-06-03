@@ -54,9 +54,19 @@ int16_t sBuffer[bufferLen];
 #define MODE_SPEAK 3
 int MODE = 0;  // set initial modality to 0 | MODE_IDLE 0, MODE_LISTEN 1, MODE_THINK 2, MODE_SPEAK 3
 
-//we define the plant id based on conf file in the filesystem
-const char* ESP_ID = returnFile(SPIFFS, "/plantid.txt").c_str();
-// default server credentials to be put in the wifimanager
-const char* websocket_server_host = returnFile(SPIFFS, "/serverip.txt").c_str();   // adress of the server ,must be stored in file sys. modifiable via wifimanager
-const char* websocket_server_port_mic = returnFile(SPIFFS, "/port1.txt").c_str();  // <WEBSOCKET_SERVER_PORT> for the mic streaming
-const char* websocket_server_port_amp = returnFile(SPIFFS, "/port2.txt").c_str();  // <WEBSOCKET_SERVER_PORT> for the sound streaming
+char ESP_ID[25];
+char websocket_server_host[25];
+char websocket_server_port_mic[5];
+char websocket_server_port_amp[5];
+
+void ReadFromFS();
+
+void ReadFromFS() {
+    //we define the plant id based on conf file in the filesystem
+    strcpy( ESP_ID, returnFile(SPIFFS, "/plantid.txt").c_str());
+    // default server credentials to be put in the wifimanager
+    strcpy( websocket_server_host , returnFile(SPIFFS, "/serverip.txt").c_str());  // adress of the server ,must be stored in file sys. modifiable via wifimanager
+    strcpy( websocket_server_port_mic , returnFile(SPIFFS, "/port1.txt").c_str()); // <WEBSOCKET_SERVER_PORT> for the mic streaming
+    strcpy( websocket_server_port_amp , returnFile(SPIFFS, "/port2.txt").c_str()); // <WEBSOCKET_SERVER_PORT> for the sound streaming
+
+}

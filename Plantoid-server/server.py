@@ -235,7 +235,7 @@ async def switch_modes():
         {"esp": "2", "mode": 1, "arg": None},
         
         {"esp": "3", "mode": 1, "arg": None},
-        {"esp": "3", "mode": 3, "arg": "I'm hungry hungry hungry hungry hungry hungry hungry hungry?"},
+        {"esp": "3", "mode": 3, "arg": "I'm am a plantoid and i'm happy and i'm speaking to you, how ar you?"},
         {"esp": "3", "mode": 1, "arg": None},
         
         {"esp": "2", "mode": 1, "arg": None},

@@ -18,7 +18,11 @@ void checkButton() {
       // start portal w delay
       if (serialDebug) Serial.println("Starting config portal");
       wm.setConfigPortalTimeout(portalDelay);
-      const char* tmp1 = ESP_ID;
+      // const char* tmp1 = ESP_ID;
+      char tmp1[35];
+      strcpy(tmp1, "Plantoid-");
+      strcat(tmp1, ESP_ID);
+
       if (!wm.startConfigPortal(tmp1, apPassword)) {
         if (serialDebug) Serial.println("failed to connect or hit timeout");
         delay(3000);
@@ -90,7 +94,11 @@ void setupWm() {
   wm.setMenu(menu);
   wm.setClass("invert");  // set dark theme
   bool res;
-  const char* tmp2 = ESP_ID;
+  //const char* tmp2 = ESP_ID;
+  char tmp2[35];
+  strcpy(tmp2, "Plantoid-");
+  strcat(tmp2, ESP_ID);
+
   res = wm.autoConnect(tmp2, apPassword);  // password protected ap
   if (!res) {
     if (serialDebug) Serial.println("Failed to connect or hit timeout");

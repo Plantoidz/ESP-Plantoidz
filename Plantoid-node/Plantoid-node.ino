@@ -28,6 +28,9 @@ void setup() {
   Serial.begin(115200);
   if (serialDebug) Serial.setDebugOutput(true);
 
+  // Load the SPIFFS data
+  ReadFromFS();
+
   // Add a handler for network events. This is misnamed "WiFi" because the ESP32 is historically WiFi only,
   // but in our case, this will react to Ethernet events.
   if (serialDebug) Serial.print("Registering event handler for ETH events...");

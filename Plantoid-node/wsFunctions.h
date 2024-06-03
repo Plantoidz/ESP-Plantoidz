@@ -66,10 +66,24 @@ void onMessageCallback_amp(WebsocketsMessage message) {
 }
 
 void connectWSServer_mic() {
+
+  if (serialDebug) {
+      Serial.print("connecting to IP server: ");
+      Serial.print(websocket_server_host);
+      Serial.print(" on port: ");
+      Serial.println(websocket_server_port_mic);
+
+      Serial.print("original file content: ");
+      Serial.println(returnFile(SPIFFS, "/serverip.txt").c_str());
+  }
+
+
   client_mic.onEvent(onEventsCallback_mic);
   client_mic.onMessage(onMessageCallback_mic);
   if (serialDebug) Serial.println("waiting for the ws server");
-  while (!client_mic.connect(websocket_server_host, int(websocket_server_port_mic), "/")) {
+  while (!client_mic.connect(websocket_server_host, atoi(websocket_server_port_mic), "/")) {
+
+
     delay(500);
 
     if (serialDebug) Serial.print(".");
