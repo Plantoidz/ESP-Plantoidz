@@ -5,17 +5,19 @@
 ESP32-S3 DevKit-C
 OLIMEX ESP32 POE
 */
+// we define if we want serial debug
+bool serialDebug = true;
 
 // time to load the libs. , configs and generic functions
-#include "includes.h"     //this needs to be first, or it all crashes and burns...
-#include "fsFunctions.h"  // yes, we have a filesystem
-#include "config.h"
-#include "wmFunctions.h"
-#include "wsSetup.h"
-#include "i2sSetup.h"
-#include "i2sFunctions.h"
-#include "ledFunctions.h"
-#include "wsFunctions.h"
+#include "includes.h"      //1 this needs to be first, or it all crashes and burns...
+#include "fsFunctions.h"   //2 yes, we have a filesystem
+#include "config.h"        //3 configuration file
+#include "wmFunctions.h"   //4 functions for the wifimanager
+#include "wsSetup.h"       //5 setup of the wifi manager
+#include "i2sSetup.h"      //6 setup of the I2S stuff
+#include "i2sFunctions.h"  //7functions to use I2S stuff
+#include "ledFunctions.h"  //8 functions linked to the LEDS
+#include "wsFunctions.h"   //9 functions for the websockets thing
 // #include "ethFunctions.h" @@@ETH
 
 void setup() {
@@ -40,7 +42,7 @@ void setup() {
   // if (serialDebug) Serial.print("Starting ETH interface...");
   // ETH.begin();
   // if (eth_connected == false) {
-     setupWm();
+  setupWm();
   // }
 
   setup_LEDs();
@@ -56,7 +58,7 @@ void loop() {
 }
 
 void set_modality(int m) {
-  //MODE_IDLE 0, MODE_LISTEN 1, MODE_THINK 2, MODE_SPEAK 3
+  //m = MODE_IDLE 0, MODE_LISTEN 1, MODE_THINK 2, MODE_SPEAK 3
   if (serialDebug) Serial.print("analysing status for m = ");
   if (serialDebug) Serial.print(m);
 
@@ -113,35 +115,23 @@ void ampTask(void* parameter) {
     int msgLength = message.length();
     if (message.type() == MessageType::Binary) {
       if (msgLength > 0) {
-
-        // i2s_write_data((char*)message.c_str(), msgLength);
-
-        // attempt at increasing volume
-
         int16_t signedSample;
         uint16_t i;
-        
-
         const char* cstr = message.c_str();
-
-      // MULTIPLE by 10 to INCREASE VOLUME
-
-        for(i=0; i<message.length(); i+=2) {
-          signedSample = *((int16_t *) (cstr + i));
+        // MULTIPLE by 10 to INCREASE VOLUME
+        for (i = 0; i < message.length(); i += 2) {
+          signedSample = *((int16_t*)(cstr + i));
           //Serial.println(signedSample);
-          if(signedSample <= -1 || signedSample >= 1) {
-              signedSample = signedSample * 10;
-              *((int16_t *) (cstr+i)) = signedSample;
+          if (signedSample <= -1 || signedSample >= 1) {
+            signedSample = signedSample * 10;
+            *((int16_t*)(cstr + i)) = signedSample;
           }
         }
-
         i2s_write_data((char*)message.c_str(), msgLength);
-
-      
       } else {
-          if (serialDebug) Serial.println("DELETING AND UNINSTALLING THE TX MODE");
-          i2s_TX_uninst();
-          vTaskDelete(NULL);
+        if (serialDebug) Serial.println("DELETING AND UNINSTALLING THE TX MODE");
+        i2s_TX_uninst();
+        vTaskDelete(NULL);
       }
     }
   }

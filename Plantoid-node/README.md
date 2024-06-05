@@ -15,9 +15,9 @@ Ceci est la partie embarquée des nouvelles plantoids,
     
     téster et mettre à l'épreuve l'ensemble.
 
-    téster l'ethernet
+    faire fonctionner l'ethernet
      
-    prise en charge de capteurs et d'actionneurs (touch sensors,servomoteurs) au niveau de l'esp (meme si la partie moteur reste limité avec le nombre de watts maxi en mode poe),pins à détéerminer(cf. schéma de cablage) , 
+    prise en charge de capteurs et d'actionneurs  via I2C (touch sensors,servomoteurs) au niveau de l'esp (meme si la partie moteur reste limité avec le nombre de watts maxi en mode poe),pins à détéerminer(cf. schéma de cablage) , 
 
     pcb, schema de cabalge en cours , reste à metre à l'épreuve les prototypes
 

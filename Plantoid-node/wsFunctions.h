@@ -37,7 +37,7 @@ void onEventsCallback_amp(WebsocketsEvent event, String data) {
     if (serialDebug) Serial.println("Connnection Opened for amp");
     isWebSocketConnected_amp = true;
   } else if (event == WebsocketsEvent::ConnectionClosed) {
-    
+
     if (serialDebug) Serial.println("Connnection Closed for amp");
     // first unset the SPEAK mode
     if (serialDebug) Serial.println("DELETING TX MODE");
@@ -77,25 +77,20 @@ void onMessageCallback_amp(WebsocketsMessage message) {
 
 void connectWSServer_mic() {
 
-   if (serialDebug) {
-      Serial.print("connecting to IP server: ");
-      Serial.print(websocket_server_host);
-      Serial.print(" on port: ");
-      Serial.println(websocket_server_port_mic);
-
-      Serial.print("original file content: ");
-      Serial.println(returnFile(SPIFFS, "/serverip.txt").c_str());
-   }
-
+  if (serialDebug) {
+    Serial.print("connecting to IP server: ");
+    Serial.print(websocket_server_host);
+    Serial.print(" on port: ");
+    Serial.println(websocket_server_port_mic);
+    Serial.print("original file content: ");
+    Serial.println(returnFile(SPIFFS, "/serverip.txt").c_str());
+  }
 
   client_mic.onEvent(onEventsCallback_mic);
   client_mic.onMessage(onMessageCallback_mic);
   if (serialDebug) Serial.println("waiting for the ws server");
   while (!client_mic.connect(websocket_server_host, atoi(websocket_server_port_mic), "/")) {
-
-
     delay(500);
-
     if (serialDebug) Serial.print(".");
     checkButton();
   }

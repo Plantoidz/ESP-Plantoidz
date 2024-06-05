@@ -2,7 +2,6 @@
 
 #define FORMAT_SPIFFS_IF_FAILED true
 
-
 String returnFile(fs::FS &fs, const char *path) {
   File file = fs.open(path, "r");
   if (!file || file.isDirectory()) {
@@ -15,9 +14,6 @@ String returnFile(fs::FS &fs, const char *path) {
   }
   return fileContent;
 }
-
-
-
 
 void listDir(fs::FS &fs, const char *dirname, uint8_t levels) {
   if (serialDebug) Serial.printf("Listing directory: %s\r\n", dirname);
@@ -52,7 +48,6 @@ void listDir(fs::FS &fs, const char *dirname, uint8_t levels) {
 
 void readFile(fs::FS &fs, const char *path) {
   if (serialDebug) Serial.printf("Reading file: %s\r\n", path);
-
   File file = fs.open(path);
   if (!file || file.isDirectory()) {
     if (serialDebug) Serial.println("- failed to open file for reading");
@@ -67,7 +62,6 @@ void readFile(fs::FS &fs, const char *path) {
 
 void writeFile(fs::FS &fs, const char *path, const char *message) {
   if (serialDebug) Serial.printf("Writing file: %s\r\n", path);
-
   File file = fs.open(path, FILE_WRITE);
   if (!file) {
     if (serialDebug) Serial.println("- failed to open file for writing");
@@ -83,7 +77,6 @@ void writeFile(fs::FS &fs, const char *path, const char *message) {
 
 void appendFile(fs::FS &fs, const char *path, const char *message) {
   if (serialDebug) Serial.printf("Appending to file: %s\r\n", path);
-
   File file = fs.open(path, FILE_APPEND);
   if (!file) {
     if (serialDebug) Serial.println("- failed to open file for appending");
