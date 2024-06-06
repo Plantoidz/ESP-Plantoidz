@@ -188,6 +188,7 @@ async def send_stream_to_websocket(websocket, path):
     #     logging.info("!@#!@#!@#!@#@!#!@#!@#!@#!@#!@#!________________________ - new the task:  ", mictask)
 
     
+    print("new agent connected")
     
     if PLAYBACK == None:
         PLAYBACK = "Hello my name is plantoid i am a blockchain based life form"
@@ -244,53 +245,60 @@ async def switch_modes():
     logging.info("Switch mode activated")
 
     tasks = [
-        {"esp": "99", "mode": 3, "arg": "Hello I am alive !!"},
-        {"esp": "98", "mode": 3, "arg": "Hello I am alive !!"},
-        {"esp": "95", "mode": 3, "arg": "Hello I am alive !!"},
-        {"esp": "94", "mode": 3, "arg": "Hello I am alive !!"},
+        
+        {"esp": "88", "mode": 3, "arg": "Hello I am alive !!"},
+        
+        # {"esp": "95", "mode": 3, "arg": "Hello I am alive !!"},
+        # {"esp": "95", "mode": 3, "arg": "Hello I am alive !!"},
+        # {"esp": "95", "mode": 3, "arg": "Hello I am alive !!"},
+        # {"esp": "95", "mode": 3, "arg": "Hello I am alive !!"},
+        # {"esp": "95", "mode": 3, "arg": "Hello I am alive !!"},
+        # {"esp": "95", "mode": 3, "arg": "Hello I am alive !!"},
 
         # {"esp": "98", "mode": 1, "arg": None},
-        # {"esp": "97", "mode": 3, "arg": "Would you like to feed me some crypto?"},
-        # # {"esp": "98", "mode": 1, "arg": None},
+        # {"esp": "99", "mode": 3, "arg": "Would you like to feed me some crypto?"},
         
-        # {"esp": "97", "mode": 3, "arg": "I'm am a plantoid and i'm happy and i'm speaking to you, how ar you?"},
-        # # {"esp": "98", "mode": 1, "arg": None},
+        # {"esp": "95", "mode": 3, "arg": "I'm am a Plantoid and i'm happy and i'm speaking to you, how ar you?"},
+        # {"esp": "98", "mode": 1, "arg": None},
         
-        # {"esp": "97", "mode": 3, "arg": "Would you like to feed me some crypto?"},
-        # # {"esp": "98", "mode": 1, "arg": None},
+        # {"esp": "94", "mode": 3, "arg": "Would you like to feed me some crypto?"},
+        # {"esp": "98", "mode": 1, "arg": None},
         
-        # {"esp": "99", "mode": 3, "arg": "I'm hungry hungry hungry hungry hungry hungry hungry hungry?"},
+        # {"esp": "99", "mode": 3, "arg": "I'm hungry hungry hungry -- can you feed me some pizza?"},
         # {"esp": "98", "mode": 1, "arg": None},
 
 
-        # {"esp": "98", "mode": 3, "arg": "I am hungry for crypto, please feed me feed me feed me !"},
-        # {"esp": "98", "mode": 1, "arg": None},
+        # {"esp": "98", "mode": 3, "arg": "I am hungry for crypto, please feed me feed me feed me NOW !"},
     ]
 
-    await asyncio.sleep(4) #NOTE: mock
+    await asyncio.sleep(3) #NOTE: mock
 
-    for task in tasks:
-        logging.info(f"Processing task: esp={task['esp']} mode={task['mode']}")
-        ws = None
-        for a in agents:
-            if a["id"] == task["esp"]:
-                ws = a["ws"]
-                logging.info(f"Found a match for {task['esp']} with socket: {ws}")
-                break
-
-        if ws is None:
-            continue
+    while True:
+        await asyncio.sleep(3)
         
+        for task in tasks:
+            logging.info(f"Processing task: esp={task['esp']} mode={task['mode']}")
+            ws = None
             for a in agents:
-                if a["ws"]:
+                if a["id"] == task["esp"]:
                     ws = a["ws"]
-                    logging.info(f"Fallback to ESP {a['id']}")
+                    logging.info(f"Found a match for {task['esp']} with socket: {ws}")
                     break
 
-        MODE = task["mode"]
-        PLAYBACK = task["arg"]
-        await ws.send(str(MODE))
-        await asyncio.sleep(5) #NOTE: mock
+            if ws is None:
+                continue
+            
+                for a in agents:
+                    if a["ws"]:
+                        ws = a["ws"]
+                        logging.info(f"Fallback to ESP {a['id']}")
+                        break
+
+            MODE = task["mode"]
+            PLAYBACK = task["arg"]
+            print("sending MODE to ESP")
+            await ws.send(str(MODE))
+            await asyncio.sleep(5) #NOTE: mock
 
 def main():
     logging.info("Starting server")
