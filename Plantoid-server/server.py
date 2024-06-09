@@ -45,8 +45,10 @@ client = ElevenLabs(
 mictask = None
 
 
-voice_id  = "K5W90fMZclFpp7zIpkCc"
 voice_id = "QjTUCwbG3OsMT4XPxAZi" # plantony :D
+voice_id = "5g2h5kYnQtKFFdPm8PpK"
+voice_id = "5g2h5kYnQtKFFdPm8PpK"
+
 
 async def save_and_transcribe(audio_data):
     timestamp = time.strftime("%Y-%m-%dT%H-%M-%S", time.gmtime())
@@ -246,9 +248,14 @@ async def switch_modes():
 
     tasks = [
         
-        {"esp": "88", "mode": 3, "arg": "Hello I am alive !!"},
+        {"esp": "94", "mode": 3, "arg": "Hello I am alive Number 94!!"},
+        {"esp": "95", "mode": 3, "arg": "Hello I am alive. Number 95 !!"},
+        #{"esp": "96", "mode": 3, "arg": "Hello I am alive. Number 96!!"},
+        {"esp": "97", "mode": 3, "arg": "Hello I am alive. Number 97 !!"},
+        {"esp": "98", "mode": 3, "arg": "Hello I am alive. Number 98 !!"},
+        #{"esp": "99", "mode": 3, "arg": "Hello I am alive. Number 99 !!"},
         
-        # {"esp": "95", "mode": 3, "arg": "Hello I am alive !!"},
+	# {"esp": "95", "mode": 3, "arg": "Hello I am alive !!"},
         # {"esp": "95", "mode": 3, "arg": "Hello I am alive !!"},
         # {"esp": "95", "mode": 3, "arg": "Hello I am alive !!"},
         # {"esp": "95", "mode": 3, "arg": "Hello I am alive !!"},
@@ -271,7 +278,7 @@ async def switch_modes():
         # {"esp": "98", "mode": 3, "arg": "I am hungry for crypto, please feed me feed me feed me NOW !"},
     ]
 
-    await asyncio.sleep(3) #NOTE: mock
+    await asyncio.sleep(1) #NOTE: mock
 
     while True:
         await asyncio.sleep(3)

@@ -118,17 +118,16 @@ void ampTask(void* parameter) {
         int16_t signedSample;
         uint16_t i;
         const char* cstr = message.c_str();
+
         // MULTIPLE by 10 to INCREASE VOLUME
-        for (i = 0; i < message.length(); i += 2) {
-          signedSample = *((int16_t*)(cstr + i));
-          //Serial.println(signedSample);
-          if (signedSample <= -1 || signedSample >= 1) {
-            signedSample = signedSample * 10;
-            *((int16_t*)(cstr + i)) = signedSample;
-          }
-        }
+        // for (i = 0; i < message.length(); i += 2) {
+        //     signedSample = *((int16_t*)(cstr + i));
+        //     signedSample = signedSample * 2;
+        //     *((int16_t*)(cstr + i)) = signedSample;
+        // }
         i2s_write_data((char*)message.c_str(), msgLength);
       } else {
+        client_amp.close();
         if (serialDebug) Serial.println("DELETING AND UNINSTALLING THE TX MODE");
         i2s_TX_uninst();
         vTaskDelete(NULL);
