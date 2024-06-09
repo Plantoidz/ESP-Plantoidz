@@ -8,6 +8,7 @@ void set_modality(int m);
 void i2s_write_data(char* buf_ptr, int buf_size);
 
 void connectWSServer_amp() {
+
   client_amp.onEvent(onEventsCallback_amp);
   while (!client_amp.connect(websocket_server_host, atoi(websocket_server_port_amp), "/")) {
     delay(500);
@@ -16,6 +17,8 @@ void connectWSServer_amp() {
   }
   if (serialDebug) Serial.println("Websocket Connected to the amp server!");
 }
+
+
 
 void onEventsCallback_mic(WebsocketsEvent event, String data) {
   if (event == WebsocketsEvent::ConnectionOpened) {
@@ -39,7 +42,10 @@ void onEventsCallback_amp(WebsocketsEvent event, String data) {
   } else if (event == WebsocketsEvent::ConnectionClosed) {
 
     if (serialDebug) Serial.println("Connnection Closed for amp");
-    // first unset the SPEAK mode
+    // go back to IDLE mode
+        MODE = MODE_IDLE;
+        LED_function = &LED_sleep;     
+    // then unset the SPEAK mode
     if (serialDebug) Serial.println("DELETING TX MODE");
     i2s_TX_uninst();
     if (i2sampTask != NULL) {

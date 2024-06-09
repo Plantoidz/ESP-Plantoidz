@@ -46,8 +46,11 @@ void setup() {
   // }
 
   setup_LEDs();
+  
   connectWSServer_mic();
+
   set_modality(MODE_IDLE);
+  LED_function = &LED_sleep;
 }
 
 void loop() {
@@ -58,9 +61,12 @@ void loop() {
 }
 
 void set_modality(int m) {
+
   //m = MODE_IDLE 0, MODE_LISTEN 1, MODE_THINK 2, MODE_SPEAK 3
   if (serialDebug) Serial.print("analysing status for m = ");
   if (serialDebug) Serial.print(m);
+
+
 
   if (m == MODE_LISTEN) {
     if (serialDebug) Serial.println("Activating listening mode.");
@@ -78,6 +84,8 @@ void set_modality(int m) {
     xTaskCreatePinnedToCore(micTask, "micTask", 10000, NULL, 1, &i2smicTask, 1);
   }
 
+
+
   if (m == MODE_SPEAK) {
     if (serialDebug) Serial.println("Activating speaking mode.");
     // first unset the LISTEN mode
@@ -92,7 +100,28 @@ void set_modality(int m) {
     LED_function = &LED_speak;
     xTaskCreatePinnedToCore(ampTask, "ampTask", 10000, NULL, 1, &i2sampTask, 1);
   }
+
+
+  if (m == MODE_THINK) {
+     if (serialDebug) Serial.println("Activating thinking mode.");
+     MODE = MODE_THINK;
+     LED_function = &LED_think;
+  }
+
+
+
+  if (m == MODE_IDLE) {
+     if (serialDebug) Serial.println("Activating idle mode.");
+     MODE = MODE_IDLE;
+     LED_function = &LED_sleep;
+  }
+
+  
 }
+
+
+
+
 
 void micTask(void* parameter) {
   i2s_RX_init(I2S_PORT_RX);
@@ -128,6 +157,8 @@ void ampTask(void* parameter) {
         i2s_write_data((char*)message.c_str(), msgLength);
       } else {
         client_amp.close();
+        MODE = MODE_IDLE;
+        LED_function = &LED_sleep; 
         if (serialDebug) Serial.println("DELETING AND UNINSTALLING THE TX MODE");
         i2s_TX_uninst();
         vTaskDelete(NULL);
