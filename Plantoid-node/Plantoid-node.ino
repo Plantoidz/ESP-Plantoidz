@@ -57,7 +57,7 @@ void loop() {
   if (wm_nonblocking) wm.process();  // avoid delays() in loop when non-blocking and other long running code
   checkButton();
   if (client_mic.available()) { client_mic.poll(); }
-  LED_loop();
+  LED_loop(1);
 }
 
 void set_modality(int m) {

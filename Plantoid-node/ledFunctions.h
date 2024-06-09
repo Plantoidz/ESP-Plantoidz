@@ -10,10 +10,11 @@ void LED_error();
 void confetti();
 void fadeall();
 void Cyclon_rainbow();
+void FirePalette(CRGBPalette16);
 void Fire2012();
 void pacifica_loop();
 void pacifica_one_layer( CRGBPalette16& p, uint16_t cistart, uint16_t wavescale, uint8_t bri, uint16_t ioff);
-void  pacifica_add_whitecaps();
+void pacifica_add_whitecaps();
 void pacifica_deepen_colors();
 
 
@@ -22,18 +23,18 @@ void setup_LEDs() {
   // so that colors can be more accurately rendered through the 'temperature' profiles
   FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);
   FastLED.setBrightness(BRIGHTNESS);
-  //LED_function = LED_listen;  //put the leds in initialy in listen mode
-  LED_error(); // so that we know the ESP is not connected to the server
+  LED_function = &LED_error;  //put the leds in initialy in listen mode
+  LED_function(); // so that we know the ESP is not connected to the server
 }
 
 
 
 
-
-void LED_loop() {
+void LED_loop(int delay) {
+  Serial.print("x");
   LED_function();
   FastLED.show();
-  FastLED.delay(1);
+  FastLED.delay(delay);
 }
 
 
@@ -44,7 +45,7 @@ void LED_sleep() {
 }
 
 void LED_speak() {
-  Fire2012();
+  FirePalette(HeatColors_p);
 }
 
 void LED_think() {
@@ -59,10 +60,12 @@ void LED_listen() {  /// RAINDOW CIRCULAR ROTATION
 
 }
 
+
 void LED_error() {
 
-      fill_solid( leds, NUM_LEDS, CRGB::Red);
-      FastLED.show();
+      // fill_solid( leds, NUM_LEDS, CRGB::Red);
+      FirePalette(CRGBPalette16( CRGB::Black, CRGB::Blue, CRGB::Aqua,  CRGB::White));
+      //FastLED.show();
 }
 
 
@@ -84,6 +87,45 @@ void confetti()
 
 
 bool gReverseDirection = false;
+
+
+void FirePalette(CRGBPalette16 gPal) {
+
+  // Array of temperature readings at each simulation cell
+  static uint8_t heat[NUM_LEDS];
+
+  // Step 1.  Cool down every cell a little
+    for( int i = 0; i < NUM_LEDS; i++) {
+      heat[i] = qsub8( heat[i],  random8(0, ((COOLING * 10) / NUM_LEDS) + 2));
+    }
+  
+    // Step 2.  Heat from each cell drifts 'up' and diffuses a little
+    for( int k= NUM_LEDS - 1; k >= 2; k--) {
+      heat[k] = (heat[k - 1] + heat[k - 2] + heat[k - 2] ) / 3;
+    }
+    
+    // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
+    if( random8() < SPARKING ) {
+      int y = random8(7);
+      heat[y] = qadd8( heat[y], random8(160,255) );
+    }
+
+    // Step 4.  Map from heat cells to LED colors
+    for( int j = 0; j < NUM_LEDS; j++) {
+      // Scale the heat value from 0-255 down to 0-240
+      // for best results with color palettes.
+      uint8_t colorindex = scale8( heat[j], 240);
+      CRGB color = ColorFromPalette( gPal, colorindex);
+      int pixelnumber;
+      if( gReverseDirection ) {
+        pixelnumber = (NUM_LEDS-1) - j;
+      } else {
+        pixelnumber = j;
+      }
+      leds[pixelnumber] = color;
+    }
+
+}
 
 void Fire2012() { // FIRE 2012
 

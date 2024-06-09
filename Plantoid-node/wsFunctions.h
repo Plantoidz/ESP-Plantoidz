@@ -10,6 +10,7 @@ void i2s_write_data(char* buf_ptr, int buf_size);
 void connectWSServer_amp() {
 
   client_amp.onEvent(onEventsCallback_amp);
+
   while (!client_amp.connect(websocket_server_host, atoi(websocket_server_port_amp), "/")) {
     delay(500);
     if (serialDebug) Serial.print(".");
@@ -96,9 +97,9 @@ void connectWSServer_mic() {
   client_mic.onMessage(onMessageCallback_mic);
   if (serialDebug) Serial.println("waiting for the ws server");
   while (!client_mic.connect(websocket_server_host, atoi(websocket_server_port_mic), "/")) {
-    delay(500);
     if (serialDebug) Serial.print(".");
     checkButton();
+    LED_loop(200);
   }
   if (serialDebug) Serial.println("Websocket Connected to the mic server!");
   client_mic.send(String(ESP_ID));
