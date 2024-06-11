@@ -72,9 +72,10 @@ void set_modality(int m) {
   if (serialDebug) Serial.println(m);
 
 
-
   if (m == MODE_LISTEN) {
     if (serialDebug) Serial.println("Activating listening mode.");
+
+    if(MODE == MODE_LISTEN) { return; } // no need to process twice if we're already in listening mode
 
     // first unset the SPEAK mode
     // if (serialDebug) Serial.println("DELETING TX MODE");
@@ -89,7 +90,8 @@ void set_modality(int m) {
 
     MODE = MODE_LISTEN;
     LED_function = &LED_listen;
-    xTaskCreatePinnedToCore(micTask, "micTask", 10000, NULL, 1, &i2smicTask, 1);
+    
+    // xTaskCreatePinnedToCore(micTask, "micTask", 10000, NULL, 1, &i2smicTask, 1);  @@ we will reactive this only if needed
   }
 
 
@@ -114,6 +116,9 @@ void set_modality(int m) {
 
   if (m == MODE_THINK) {
      if (serialDebug) Serial.println("Activating thinking mode.");
+
+     if(MODE == MODE_THINK) { return; } // no need to process twice if we're already in listening mode
+
      MODE = MODE_THINK;
      LED_function = &LED_think;
 
@@ -124,6 +129,9 @@ void set_modality(int m) {
 
   if (m == MODE_IDLE) {
      if (serialDebug) Serial.println("Activating idle mode.");
+
+    if(MODE == MODE_IDLE) { return; } // no need to process twice if we're already in listening mode
+
      MODE = MODE_IDLE;
      LED_function = &LED_sleep;
 
