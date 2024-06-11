@@ -29,8 +29,9 @@ const i2s_config_t i2s_config_tx = {
   .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
   .dma_buf_count = 32,
   .dma_buf_len = 64,
-  .use_apll = true,
-  .fixed_mclk = 0
+  .tx_desc_auto_clear = true
+  // .use_apll = true,
+  // .fixed_mclk = 0,
 };
 
 // BACKUP CONFIG (almost working, but stuttering sometimes)

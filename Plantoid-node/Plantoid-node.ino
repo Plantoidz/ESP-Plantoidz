@@ -63,20 +63,13 @@ void loop() {
 
 
 
-void deactivate_TX() {
-  if (serialDebug) Serial.println("DELETING TX MODE");
-    i2s_TX_uninst();
-    if (i2sampTask != NULL) {
-      vTaskDelete(i2sampTask);
-      i2sampTask = NULL;
-    }
-}
+
 
 void set_modality(int m) {
 
   //m = MODE_IDLE 0, MODE_LISTEN 1, MODE_THINK 2, MODE_SPEAK 3
   if (serialDebug) Serial.print("analysing status for m = ");
-  if (serialDebug) Serial.print(m);
+  if (serialDebug) Serial.println(m);
 
 
 
@@ -114,6 +107,7 @@ void set_modality(int m) {
     // then activate the SPEAK mode
     MODE = MODE_SPEAK;
     LED_function = &LED_speak;
+    TXtask_active = true;
     xTaskCreatePinnedToCore(ampTask, "ampTask", 10000, NULL, 1, &i2sampTask, 1);
   }
 
@@ -122,8 +116,10 @@ void set_modality(int m) {
      if (serialDebug) Serial.println("Activating thinking mode.");
      MODE = MODE_THINK;
      LED_function = &LED_think;
-  }
 
+    deactivate_TX();
+
+  }
 
 
   if (m == MODE_IDLE) {
@@ -158,9 +154,14 @@ void ampTask(void* parameter) {
   i2s_TX_init(I2S_PORT_TX);
   i2s_start(I2S_PORT_TX);
   connectWSServer_amp();
+
+  if (serialDebug) Serial.println("inside the ampTask... will now start reading from socket: ");
+
   while (1) {
     WebsocketsMessage message = client_amp.readBlocking();
     int msgLength = message.length();
+    if(serialDebug) { Serial.print("received msg of length : "); Serial.println(msgLength);}
+
     if (message.type() == MessageType::Binary) {
       if (msgLength > 0) {
         int16_t signedSample;
@@ -174,14 +175,19 @@ void ampTask(void* parameter) {
         //     *((int16_t*)(cstr + i)) = signedSample;
         // }
         i2s_write_data((char*)message.c_str(), msgLength);
-      } else {
-        client_amp.close();
-        MODE = MODE_IDLE;
-        LED_function = &LED_sleep; 
 
-        if (serialDebug) Serial.println("DELETING AND UNINSTALLING THE TX MODE");
-        i2s_TX_uninst();
-        vTaskDelete(NULL);
+      } else { 
+        client_amp.close();
+
+// this is already being tackled within the WebsocketsEvent::ConnectionClosed event
+        
+        // MODE = MODE_IDLE;
+        // LED_function = &LED_sleep; 
+
+        // if (serialDebug) Serial.println("DELETING AND UNINSTALLING THE TX MODE");
+        // i2s_TX_uninst();
+        // i2sampTask = NULL;
+        // vTaskDelete(NULL);
       }
     }
   }

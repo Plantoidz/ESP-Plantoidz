@@ -6,6 +6,8 @@ void onEventsCallback_amp(WebsocketsEvent event, String data);
 void onEventsCallback_mic(WebsocketsEvent event, String data);
 void set_modality(int m);
 void i2s_write_data(char* buf_ptr, int buf_size);
+void deactivate_TX();
+
 
 void connectWSServer_amp() {
 
@@ -40,19 +42,24 @@ void onEventsCallback_amp(WebsocketsEvent event, String data) {
   if (event == WebsocketsEvent::ConnectionOpened) {
     if (serialDebug) Serial.println("Connnection Opened for amp");
     isWebSocketConnected_amp = true;
+
   } else if (event == WebsocketsEvent::ConnectionClosed) {
 
     if (serialDebug) Serial.println("Connnection Closed for amp");
     // go back to IDLE mode
         MODE = MODE_IDLE;
         LED_function = &LED_sleep;     
+
     // then unset the SPEAK mode
-    if (serialDebug) Serial.println("DELETING TX MODE");
-    i2s_TX_uninst();
-    if (i2sampTask != NULL) {
-      vTaskDelete(i2sampTask);
-      i2sampTask = NULL;
-    }
+    if (serialDebug) Serial.println("DELETING TX MODE (from onEventsCallback_amp)");
+    deactivate_TX();
+
+    // i2s_TX_uninst();
+    // if (i2sampTask != NULL) {
+    //   vTaskDelete(i2sampTask);
+    //   i2sampTask = NULL;
+    // }
+
     isWebSocketConnected_amp = false;
 
   } else if (event == WebsocketsEvent::GotPing) {
@@ -104,3 +111,28 @@ void connectWSServer_mic() {
   if (serialDebug) Serial.println("Websocket Connected to the mic server!");
   client_mic.send(String(ESP_ID));
 }
+
+
+bool TXtask_active = false;
+
+void deactivate_TX() {
+  if (serialDebug) Serial.println("calling: DELETING TX MODE");
+
+    i2s_TX_uninst();
+
+      if(TXtask_active) {
+    // if (i2sampTask != NULL) {
+            Serial.print("i2sampTask (not null???). Number of tasks running = ");
+            Serial.println(uxTaskGetNumberOfTasks());
+            Serial.println("also deleting the i2sampTask !!!!!");
+            TXtask_active = false;
+            vTaskDelete(i2sampTask);
+
+            // for some reason thtis is never being run whats' below !?
+            i2sampTask = NULL;
+            Serial.println("i2sampTask has been nullified -  of tasks running = ");
+            Serial.println(uxTaskGetNumberOfTasks());
+    }
+}
+
+
