@@ -12,7 +12,7 @@ void connectWSServer_amp() {
   client_amp.onEvent(onEventsCallback_amp);
 
   while (!client_amp.connect(websocket_server_host, atoi(websocket_server_port_amp), "/")) {
-    delay(500);
+    delay(350);
     if (serialDebug) Serial.print(".");
     checkButton();
   }

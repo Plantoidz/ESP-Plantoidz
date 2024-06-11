@@ -17,7 +17,7 @@ WiFiManagerParameter custom_field4;  // global param ( for non blocking w params
 static bool eth_connected = false;  // is eth connected ?
 // Information about the LED strip itself
 #define LED_PIN 3
-#define NUM_LEDS 25
+#define NUM_LEDS 12
 #define CHIPSET WS2811
 #define COLOR_ORDER GRB
 CRGB leds[NUM_LEDS];

@@ -31,7 +31,6 @@ void setup_LEDs() {
 
 
 void LED_loop(int delay) {
-  Serial.print("x");
   LED_function();
   FastLED.show();
   FastLED.delay(delay);

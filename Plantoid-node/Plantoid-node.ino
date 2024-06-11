@@ -25,7 +25,7 @@ void setup() {
     if (serialDebug) Serial.println("SPIFFS Mount Failed");
     return;
   }
-  delay(500);  // power-up safety delay
+  delay(300);  // power-up safety delay
   pinMode(TRIGGER_PIN, INPUT_PULLUP);
   Serial.begin(115200);
   if (serialDebug) Serial.setDebugOutput(true);
@@ -60,6 +60,18 @@ void loop() {
   LED_loop(1);
 }
 
+
+
+
+void deactivate_TX() {
+  if (serialDebug) Serial.println("DELETING TX MODE");
+    i2s_TX_uninst();
+    if (i2sampTask != NULL) {
+      vTaskDelete(i2sampTask);
+      i2sampTask = NULL;
+    }
+}
+
 void set_modality(int m) {
 
   //m = MODE_IDLE 0, MODE_LISTEN 1, MODE_THINK 2, MODE_SPEAK 3
@@ -72,12 +84,15 @@ void set_modality(int m) {
     if (serialDebug) Serial.println("Activating listening mode.");
 
     // first unset the SPEAK mode
-    if (serialDebug) Serial.println("DELETING TX MODE");
-    i2s_TX_uninst();
-    if (i2sampTask != NULL) {
-      vTaskDelete(i2sampTask);
-      i2sampTask = NULL;
-    }
+    // if (serialDebug) Serial.println("DELETING TX MODE");
+    // i2s_TX_uninst();
+    // if (i2sampTask != NULL) {
+    //   vTaskDelete(i2sampTask);
+    //   i2sampTask = NULL;
+    // }
+
+
+    deactivate_TX();
 
     MODE = MODE_LISTEN;
     LED_function = &LED_listen;
@@ -89,12 +104,13 @@ void set_modality(int m) {
   if (m == MODE_SPEAK) {
     if (serialDebug) Serial.println("Activating speaking mode.");
     // first unset the LISTEN mode
-    if (serialDebug) Serial.println("DELETING RX MODE");
-    i2s_RX_uninst();
-    if (i2smicTask != NULL) {
-      vTaskDelete(i2smicTask);
-      i2smicTask = NULL;
-    }
+              // TODO: this will need to be reactivated when we want to use the mic again
+              // if (serialDebug) Serial.println("DELETING RX MODE");
+              // i2s_RX_uninst();
+              // if (i2smicTask != NULL) {
+              //   vTaskDelete(i2smicTask);
+              //   i2smicTask = NULL;
+              // }
     // then activate the SPEAK mode
     MODE = MODE_SPEAK;
     LED_function = &LED_speak;
@@ -114,6 +130,9 @@ void set_modality(int m) {
      if (serialDebug) Serial.println("Activating idle mode.");
      MODE = MODE_IDLE;
      LED_function = &LED_sleep;
+
+    deactivate_TX();
+
   }
 
   
@@ -159,6 +178,7 @@ void ampTask(void* parameter) {
         client_amp.close();
         MODE = MODE_IDLE;
         LED_function = &LED_sleep; 
+
         if (serialDebug) Serial.println("DELETING AND UNINSTALLING THE TX MODE");
         i2s_TX_uninst();
         vTaskDelete(NULL);
