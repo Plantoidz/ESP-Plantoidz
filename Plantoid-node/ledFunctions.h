@@ -12,10 +12,34 @@ void fadeall();
 void Cyclon_rainbow();
 void FirePalette(CRGBPalette16);
 void Fire2012();
-void pacifica_loop();
+void pacifica_loop(CRGBPalette16, CRGBPalette16, CRGBPalette16);
 void pacifica_one_layer( CRGBPalette16& p, uint16_t cistart, uint16_t wavescale, uint8_t bri, uint16_t ioff);
 void pacifica_add_whitecaps();
 void pacifica_deepen_colors();
+
+
+
+CRGBPalette16 pacifica_palette_1 = 
+    { 0x000507, 0x000409, 0x00030B, 0x00030D, 0x000210, 0x000212, 0x000114, 0x000117, 
+      0x000019, 0x00001C, 0x000026, 0x000031, 0x00003B, 0x000046, 0x14554B, 0x28AA50 };
+CRGBPalette16 pacifica_palette_2 = 
+    { 0x000507, 0x000409, 0x00030B, 0x00030D, 0x000210, 0x000212, 0x000114, 0x000117, 
+      0x000019, 0x00001C, 0x000026, 0x000031, 0x00003B, 0x000046, 0x0C5F52, 0x19BE5F };
+CRGBPalette16 pacifica_palette_3 = 
+    { 0x000208, 0x00030E, 0x000514, 0x00061A, 0x000820, 0x000927, 0x000B2D, 0x000C33, 
+      0x000E39, 0x001040, 0x001450, 0x001860, 0x001C70, 0x002080, 0x1040BF, 0x2060FF };
+ 
+
+CRGBPalette16 pacifica_palette_1x = 
+    { 0x000507, 0x000409, 0x00030B, 0x00030D, 0x000210, 0x000212, 0x000114, 0x000117, 
+      0x000019, 0x00001C, 0x000026, 0x000031, 0x00003B, 0x000046, 0xa8032d, 0xf60000 };
+CRGBPalette16 pacifica_palette_2x = 
+    { 0x000507, 0x000409, 0x00030B, 0x00030D, 0x000210, 0x000212, 0x000114, 0x000117, 
+      0x000019, 0x00001C, 0x000026, 0x000031, 0x00003B, 0x000046, 0x0cb552, 0x19fe12F };
+CRGBPalette16 pacifica_palette_3x = 
+    { 0x000208, 0x00030E, 0x000514, 0x00061A, 0x000820, 0x000927, 0x000B2D, 0x000C33, 
+      0x000E39, 0x001040, 0x001450, 0x001860, 0x001C70, 0x002080, 0x10c340, 0x20fe62 };
+ 
 
 
 void setup_LEDs() {
@@ -40,7 +64,7 @@ void LED_loop(int delay) {
 
 
 void LED_sleep() {
-  pacifica_loop();
+  pacifica_loop(pacifica_palette_1, pacifica_palette_2, pacifica_palette_3 );
 }
 
 void LED_speak() {
@@ -48,14 +72,17 @@ void LED_speak() {
 }
 
 void LED_think() {
-  Cyclon_rainbow();
+  //Cyclon_rainbow();
+  confetti();
 }
 
 void LED_listen() {  /// RAINDOW CIRCULAR ROTATION
 
   // draw a generic, no-name rainbow
-  static uint8_t starthue = 0;
-  fill_rainbow(leds, NUM_LEDS, --starthue, 20);
+  // static uint8_t starthue = 0;
+  // fill_rainbow(leds, NUM_LEDS, --starthue, 20);
+
+  pacifica_loop(pacifica_palette_1x, pacifica_palette_2x, pacifica_palette_3x );
 
 }
 
@@ -63,7 +90,7 @@ void LED_listen() {  /// RAINDOW CIRCULAR ROTATION
 void LED_error() {
 
       // fill_solid( leds, NUM_LEDS, CRGB::Red);
-      FirePalette(CRGBPalette16( CRGB::Black, CRGB::Blue, CRGB::Aqua,  CRGB::White));
+      FirePalette(CRGBPalette16( CRGB::Black, CRGB::Blue, CRGB::Aqua, CRGB::White));
       //FastLED.show();
 }
 
@@ -198,19 +225,8 @@ void fadeall() {
 
 
 
-
-CRGBPalette16 pacifica_palette_1 = 
-    { 0x000507, 0x000409, 0x00030B, 0x00030D, 0x000210, 0x000212, 0x000114, 0x000117, 
-      0x000019, 0x00001C, 0x000026, 0x000031, 0x00003B, 0x000046, 0x14554B, 0x28AA50 };
-CRGBPalette16 pacifica_palette_2 = 
-    { 0x000507, 0x000409, 0x00030B, 0x00030D, 0x000210, 0x000212, 0x000114, 0x000117, 
-      0x000019, 0x00001C, 0x000026, 0x000031, 0x00003B, 0x000046, 0x0C5F52, 0x19BE5F };
-CRGBPalette16 pacifica_palette_3 = 
-    { 0x000208, 0x00030E, 0x000514, 0x00061A, 0x000820, 0x000927, 0x000B2D, 0x000C33, 
-      0x000E39, 0x001040, 0x001450, 0x001860, 0x001C70, 0x002080, 0x1040BF, 0x2060FF };
  
- 
-void pacifica_loop()
+void pacifica_loop(CRGBPalette16 p1, CRGBPalette16 p2, CRGBPalette16 p3)
 {
   // Increment the four "color index start" counters, one for each wave layer.
   // Each is incremented at a different speed, and the speeds vary over time.
@@ -233,10 +249,10 @@ void pacifica_loop()
   fill_solid( leds, NUM_LEDS, CRGB( 2, 6, 10));
  
   // Render each of four layers, with different scales and speeds, that vary over time
-  pacifica_one_layer( pacifica_palette_1, sCIStart1, beatsin16( 3, 11 * 256, 14 * 256), beatsin8( 10, 70, 130), 0-beat16( 301) );
-  pacifica_one_layer( pacifica_palette_2, sCIStart2, beatsin16( 4,  6 * 256,  9 * 256), beatsin8( 17, 40,  80), beat16( 401) );
-  pacifica_one_layer( pacifica_palette_3, sCIStart3, 6 * 256, beatsin8( 9, 10,38), 0-beat16(503));
-  pacifica_one_layer( pacifica_palette_3, sCIStart4, 5 * 256, beatsin8( 8, 10,28), beat16(601));
+  pacifica_one_layer( p1, sCIStart1, beatsin16( 3, 11 * 256, 14 * 256), beatsin8( 10, 70, 130), 0-beat16( 301) );
+  pacifica_one_layer( p2, sCIStart2, beatsin16( 4,  6 * 256,  9 * 256), beatsin8( 17, 40,  80), beat16( 401) );
+  pacifica_one_layer( p3, sCIStart3, 6 * 256, beatsin8( 9, 10,38), 0-beat16(503));
+  pacifica_one_layer( p3, sCIStart4, 5 * 256, beatsin8( 8, 10,28), beat16(601));
  
   // Add brighter 'whitecaps' where the waves lines up more
   pacifica_add_whitecaps();
