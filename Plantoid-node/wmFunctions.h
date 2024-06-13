@@ -24,8 +24,8 @@ void checkButton() {
       strcat(tmp1, ESP_ID);
 
       if (!wm.startConfigPortal(tmp1, apPassword)) {
-        if (serialDebug) Serial.println("failed to connect or hit timeout");
-        delay(3000);
+          Serial.println("failed to connect or hit timeout - from PressButton");
+          ESP.restart();
       } else {
         //if you get here you have connected to the WiFi
         if (serialDebug) Serial.println("Pantoid connected... by wifi :)");
@@ -93,6 +93,7 @@ void setupWm() {
   std::vector<const char*> menu = { "wifi", "info", "param", "sep", "restart", "exit" };  // custom menu via vector
   wm.setMenu(menu);
   wm.setClass("invert");  // set dark theme
+  wm.setConfigPortalTimeout(portalDelay); 
   bool res;
   //const char* tmp2 = ESP_ID;
   char tmp2[35];
@@ -101,7 +102,9 @@ void setupWm() {
 
   res = wm.autoConnect(tmp2, apPassword);  // password protected ap
   if (!res) {
-    if (serialDebug) Serial.println("Failed to connect or hit timeout");
+    Serial.println("Failed to connect or hit timeout - from autoconnect");
+    ESP.restart();
+
   } else {
     //if you get here you have connected to the WiFi
     if (serialDebug) Serial.println("Pantoid connected... by wifi :)");
